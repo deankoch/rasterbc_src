@@ -14,10 +14,6 @@
 #' 
 #' 
 
-
-
-
-
 ## here is a regular code comment, that will remain as such
 summary(VADeaths)
 
