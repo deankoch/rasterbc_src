@@ -1,4 +1,4 @@
 # rasterbc
-MPB-related raster data layers in BC (2001-2018)
+Raster data layers relevant to modelling the mountain pine beetle (MPB) epidemic in BC for the period 2001-2018
 
-Downloads and assembles data in raster form from publicly accessible collections on various government websites
+Downloads MPB-related data from publicly accessible collections on various government websites, consolidating it in a common raster format. Layers are organized into mapsheets to allow users to more conveniently download small subsets.
