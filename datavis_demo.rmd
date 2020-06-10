@@ -2,7 +2,7 @@
 title: "examples to demonstrate data visualization"
 author: "Dean Koch"
 date: "10/06/2020"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
