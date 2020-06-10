@@ -5,21 +5,17 @@ date: "June 10, 2020"
 output: github_document
 ---
 
-This is the initial setup script for reproducing the rasterbc dataset. It downloads some shapefiles to define BC borders, sets up config for preprocessing
+This is the initial setup script for reproducing the rasterbc dataset. 
+It downloads some shapefiles to define BC borders, sets up config for preprocessing.
 
-The geographical projection system is set to match the one used in the `bcmaps` package (Albers NAD83, standard in BC). Resolution and extent are set to match hectaresBC.org and extents are defined for each individual output tile (10km x 10km mapsheet).
+The geographical projection system is set to match the one used in the `bcmaps` package (Albers NAD83, standard in BC). 
+Resolution and extent are set to match hectaresBC.org and extents are defined for each individual output tile (10km x 10km mapsheet).
 
 
 
 
 
 ```r
-## R script (markdown render-ready)
-## 
-
-
-
-
 ## here is a regular code comment, that will remain as such
 summary(VADeaths)
 ```
@@ -46,7 +42,7 @@ dotchart(VADeaths, main = "Death Rates in Virginia - 1940")
 
 ![](src_borders_files/figure-gfm/dotchart-1.png)<!-- -->
 
-```r
-# rmarkdown::render(here('src_borders.R'), run_pandoc=FALSE, clean=TRUE)
-```
-
+---
+R script (markdown render-ready)
+rmarkdown::render(here('src_borders.R'), run_pandoc=FALSE, clean=TRUE)
+---
