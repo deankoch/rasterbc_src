@@ -600,6 +600,7 @@ body {
 
 <body>
 
+<<<<<<< HEAD
 <h1 id="utility_functionsr">utility_functions.R</h1>
 <p>Dean Koch June 10, 2020</p>
 <p>This loads required packages, sets up parameters, and defines some helper functions. It is sourced at the beginning of all of the individual downloading/pre-processing scripts.</p>
@@ -612,6 +613,20 @@ body {
 <span id="cb1-6"><a href="#cb1-6"></a><span class="kw">library</span>(RCurl)</span>
 <span id="cb1-7"><a href="#cb1-7"></a></span>
 <span id="cb1-8"><a href="#cb1-8"></a><span class="co"># handling tifs, shapefiles</span></span>
+=======
+<h1 id="utility-functions">Utility functions</h1>
+<p>Dean Koch June 10, 2020</p>
+<p>This loads required packages, and defines some helper functions. It is sourced by all of the individual downloading/pre-processing scripts.</p>
+<p>Required packages: make sure these are all installed</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co"># sensible guess for working directory</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">library</span>(here)</span>
+<span id="cb1-3"><a href="#cb1-3"></a></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="co"># packages for scraping</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="kw">library</span>(rvest)</span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="kw">library</span>(RCurl)</span>
+<span id="cb1-7"><a href="#cb1-7"></a></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="co"># handle tifs, shapefiles</span></span>
+>>>>>>> 3501a08e889725d2349d7efb280824e15431e03b
 <span id="cb1-9"><a href="#cb1-9"></a><span class="kw">library</span>(raster)</span>
 <span id="cb1-10"><a href="#cb1-10"></a><span class="kw">library</span>(rgdal)</span>
 <span id="cb1-11"><a href="#cb1-11"></a><span class="kw">library</span>(gdalUtils)</span>
@@ -624,10 +639,13 @@ body {
 <span id="cb1-18"><a href="#cb1-18"></a></span>
 <span id="cb1-19"><a href="#cb1-19"></a><span class="co"># parallel execution</span></span>
 <span id="cb1-20"><a href="#cb1-20"></a><span class="kw">library</span>(doSNOW)</span></code></pre></div>
+<<<<<<< HEAD
 <p><strong>important user-defined parameters</strong></p>
 <p>define/create a directory for storage of all downloaded source files and output files.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>data.dir =<span class="st"> </span><span class="kw">here</span>(<span class="st">&#39;data&#39;</span>)</span></code></pre></div>
 <p>By default this is the subdirectory ‘data’ relative to the location of the R project file (ie. …/rasterbc/data). Around 60GB of data in total will be downloaded/written. Feel free to change this (eg. to a drive with bigger storage), but be careful not to assign it to to an existing directory as I do not check for existing files, so <em>anything already in data.dir could get overwritten</em>.</p>
+=======
+>>>>>>> 3501a08e889725d2349d7efb280824e15431e03b
 
 </body>
 </html>

@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 utility\_functions.R
+=======
+Utility functions
+>>>>>>> 3501a08e889725d2349d7efb280824e15431e03b
 ================
 Dean Koch
 June 10, 2020
 
+<<<<<<< HEAD
 This loads required packages, sets up parameters, and defines some
 helper functions. It is sourced at the beginning of all of the
 individual downloading/pre-processing scripts.
@@ -18,6 +23,22 @@ library(rvest)
 library(RCurl)
 
 # handling tifs, shapefiles
+=======
+This loads required packages, and defines some helper functions. It is
+sourced by all of the individual  downloading/pre-processing scripts.
+
+Required packages: make sure these are all installed
+
+``` r
+# sensible guess for working directory
+library(here)
+
+# packages for scraping
+library(rvest)
+library(RCurl)
+
+# handle tifs, shapefiles
+>>>>>>> 3501a08e889725d2349d7efb280824e15431e03b
 library(raster)
 library(rgdal)
 library(gdalUtils)
@@ -31,6 +52,7 @@ library(ggplot2)
 # parallel execution
 library(doSNOW)
 ```
+<<<<<<< HEAD
 
 **important user-defined parameters**
 
@@ -47,3 +69,5 @@ will be downloaded/written. Feel free to change this (eg. to a drive
 with bigger storage), but be careful not to assign it to to an existing
 directory as I do not check for existing files, so *anything already in
 data.dir could get overwritten*.
+=======
+>>>>>>> 3501a08e889725d2349d7efb280824e15431e03b
