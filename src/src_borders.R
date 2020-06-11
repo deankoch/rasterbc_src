@@ -33,4 +33,3 @@ summary(VADeaths)
 # Convert to markdown by running the following line (uncommented)...
 # rmarkdown::render(here('src/src_borders.R'), run_pandoc=FALSE, clean=TRUE)
 # rmarkdown::render(here('src/src_borders.R'))
-       
