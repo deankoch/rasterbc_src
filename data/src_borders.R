@@ -5,6 +5,7 @@
 #' output: github_document
 #' ---
 #' 
+#' 
 #' This is the initial setup script for reproducing the rasterbc dataset. 
 #' It downloads some shapefiles to define boundaries, and sets up configuration details for GIS processing.
 #' 
@@ -26,13 +27,6 @@
 
 # here is a regular code comment, that will remain as such
 summary(VADeaths)
-
-#' Here's some more prose. I can use usual markdown syntax to make things
-#' **bold** or *italics*. Let's use an example from the `dotchart()` help to
-#' make a Cleveland dot plot from the `VADeaths` data. I even bother to name
-#' this chunk, so the resulting PNG has a decent name.
-#+ dotchart
-dotchart(VADeaths, main = "Death Rates in Virginia - 1940")
 
 
 #+ echo=FALSE
