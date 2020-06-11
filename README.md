@@ -13,3 +13,11 @@ Datasets from environment ministries are publicly available online, but acquirin
 
 Layers are organized as mapsheets (a tiling of the full landbase of BC), allowing users to download small subsets corresponding to the geographic extent of their study area(s).
 
+Note that the spatial reference system used here 
+(<a href="https://spatialreference.org/ref/epsg/nad83-bc-albers/" target="_blank">NAD83 / BC Albers</a>)
+is shared by both the 
+<a href="https://cran.r-project.org/web/packages/bcmaps/index.html" target="_blank">bcmaps</a>
+package and the
+(<a href="http://hectaresBC.org" target="_blank">hectaresBC</a>) website,
+so users can combine data from all three sources without fooling around with projection and alignment. 
+ 

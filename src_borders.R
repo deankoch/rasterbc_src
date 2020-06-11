@@ -9,14 +9,7 @@
 #' This is the initial setup script for reproducing the rasterbc dataset. 
 #' It downloads some shapefiles to define boundaries, and sets up configuration details for GIS processing.
 #' 
-#' Note that the spatial reference system used here 
-#' (<a href="https://spatialreference.org/ref/epsg/nad83-bc-albers/" target="_blank">NAD83 / BC Albers</a>)
-#' is shared by both the 
-#' <a href="https://cran.r-project.org/web/packages/bcmaps/index.html" target="_blank">bcmaps</a>
-#' package and the
-#' (<a href="http://hectaresBC.org" target="_blank">hectaresBC</a>) website,
-#' so users can combine data from all three sources without fooling around with projection and alignment. 
-#' 
+
 
 library(here)
 
