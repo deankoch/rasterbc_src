@@ -1,9 +1,14 @@
----
-title: "utility_functions.R"
-author: "Dean Koch"
-date: "June 10, 2020"
-output: github_document
----
+
+
+```r
+# ---
+# title: "utility_functions.R"
+# author: "Dean Koch"
+# date: "June 10, 2020"
+# output: github_document
+# ---
+```
+
 
 
 This loads required packages, sets up parameters, and defines some helper functions. It is sourced at
@@ -85,3 +90,11 @@ a partition to split the work over, and merging everything together at the end u
 
 
 
+
+
+---
+title: utility_functions.R
+author: deank
+date: '2020-06-10'
+
+---

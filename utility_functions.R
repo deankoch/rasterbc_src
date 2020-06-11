@@ -1,9 +1,9 @@
-#' ---
-#' title: "utility_functions.R"
-#' author: "Dean Koch"
-#' date: "June 10, 2020"
-#' output: github_document
-#' ---
+# ---
+# title: "utility_functions.R"
+# author: "Dean Koch"
+# date: "June 10, 2020"
+# output: github_document
+# ---
 #' 
 #' 
 
