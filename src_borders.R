@@ -1,19 +1,22 @@
 #' ---
-#' title: "borders"
+#' title: "BC borders"
 #' author: "Dean Koch"
 #' date: "June 10, 2020"
 #' output: github_document
 #' ---
+#' 
 #' This is the initial setup script for reproducing the rasterbc dataset. 
-#' It downloads some shapefiles to define BC borders, sets up config for preprocessing.
+#' It downloads some shapefiles to define boundaries, and sets up configuration details for GIS processing.
 #' 
-#' The geographical projection system is set to match the one used in the 
-#' \url{https://cran.r-project.org/web/packages/bcmaps/index.html}{bcmaps}
-#' package (Albers NAD83, standard in BC). Resolution and extent are set to match 
-#' \href{http://hectaresBC.org}{hectaresBC.org}
-#' and extents are defined for each individual output tile (10km x 10km mapsheet).
+#' Note that the spatial reference system used here 
+#' (<a href="https://spatialreference.org/ref/epsg/nad83-bc-albers/" target="_blank">NAD83 / BC Albers</a>)
+#' is shared by both the 
+#' <a href="https://cran.r-project.org/web/packages/bcmaps/index.html" target="_blank">bcmaps</a>
+#' package and the
+#' (<a href="http://hectaresBC.org" target="_blank">hectaresBC</a>) website,
+#' so users can combine data from all three sources without fooling around with projection and alignment. 
 #' 
-#' 
+
 
 
 # some more comment testing
