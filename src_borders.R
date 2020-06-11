@@ -13,6 +13,8 @@
 
 library(here)
 
+source(here('utility_functions.R'))
+
 # some more comment testing
 # /* testin
 # multiline

@@ -39,25 +39,35 @@ library(doSNOW)
 #' be aware of the default storage path:
 # all downloaded source files and output files go here
 data.dir = here('data')
-dir.create(data.dir, recursive=TRUE)
+# /*
+if(!dir.exists(data.dir))
+{
+  dir.create(data.dir, recursive=TRUE)
+  print(paste('data directory', data.dir, 'created'))
+  
+} else {
+  
+  print(paste('data directory', data.dir, 'exists'))
+}
+# */
 
-#' By default this is the subdirectory 'data' relative to the location of the R project file (.../rasterbc/data). 
+#' By default this is the subdirectory 'data' relative to the location of the R project file (...\\rasterbc\\data). 
 #' Around 60GB of data in total will be downloaded/written by the 'src_\*.R' scripts. Feel free to change this to another 
-#' path (*eg.* a drive with more free space), but be careful not to assign it to to an existing directory 
-#' as I do not check for existing files, so *anything already data.dir could get overwritten*.
+#' path (*eg.* a drive with more free space), but be careful about assigning it to an existing directory 
+#' as I do not check for existing files, so *anything already in data.dir could get overwritten*.
 #'
-#' Some of the rasterization jobs are very time-consuming. This can be sped up by running things in parallel 
+#' Some of the rasterization jobs are very time-consuming. This can be sped up by running things in parallel. 
 
 #  set the number of cores to use with doSNOW (set to 1 if doSNOW/multicore not available)
 n.cores = 3
-#' Rasterization of an NTS tile requires around 6GB. So with 3 cores going in parallel we need at least 18GB of RAM. 
-#' If you are encountering out-of-memory errors, consider reducing 'n.cores', or changing to code to parallelize over 
-#' smaller chunks (*eg.* the TRIM tiles within each NTS tile).
+#' Rasterization of an NTS tile requires around 6GB of memory. So with 3 cores going in parallel we need at least 18GB of RAM. 
+#' If you are encountering out-of-memory errors, consider reducing 'n.cores', or changing the code to parallelize over 
+#' smaller chunks (*eg.* the TRIM tiles within each NTS tile) via the `blocks.sf` argument below.
 #' 
 
 #' **Convenience functions**
 
-# blockwise/parallel rasterization of big datasets
+# blockwise/parallel rasterization of large shapefiles
 MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf=NULL, n.cores=1) 
 {
   # rasterizes the input shapefile poly.sf (a POLYGON or MULTIPOLYGON) as GeoTiff written to 
@@ -215,13 +225,65 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
 }
 
 #' This works by calling `fasterize::fasterize` (with `fun='any'`) on the polygons in `poly.sf` to make a presence/absence 
-#' layer at `aggr.factor` times higher resolution than `mask.tif`. This high-res layer is then downsampled (by averaging 
+#' layer at `aggr.factor` times higher resolution than `mask.tif`. This high-resolution layer is then downsampled (by averaging 
 #' with `gdalwarp`) to the desired output resolution. 
 #' 
 #' `blocks.sf` allows large jobs to be done in parallel, by providing 
 #' a partition to split the work over, and (optionally) merging everything together at the end using `gdalUtils::mosaic_rasters`. 
-#' Here we process the NTS tiles 3 at a time (`n.cores`=3), and theres no need to merge the result because this tiling is how we 
-#' want the data split up in the end.
+#' 
+
+#' After downloading and processing each data collection, I store the metadata in a big nested list structure:
+# metadata list builder for different sources
+MPB_metadata = function(varname, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
+{
+  # If called with varname only, creates the storage directory and
+  # returns a (mostly empty) list with entries to be filled in later.
+  # If cfg.in is specified, then elements in cfg.src and/or cfg.out 
+  # which are missing from cfg.in are added to the output list. 
+  
+  # (contents below are hidden from markdown: see utility_functions.R for details)
+  # /*
+  
+  # define storage directory for source files (creating it if necessary)
+  subdir.out = file.path(data.dir, varname, 'source')
+  if(!dir.exists(subdir.out))
+  {
+    dir.create(subdir.out, recursive=TRUE)
+    print(paste(varname, 'subdirectory created'))
+    
+  } else {
+  
+    print(paste(varname, 'subdirectory exists'))
+  }
+  print(paste('source data storage:', subdir.out))
+  
+  # create the source metadata list
+  temp.src = list(url = NULL,
+                  fns = NULL,
+                  path = subdir.out)
+  
+  cfg.src = modifyList(temp.src, cfg.src, keep.null=TRUE)
+  cfg.src = modifyList(temp.src, cfg.src, keep.null=TRUE)
+  
+  # create the output data metadata list
+  temp.out = list(subdir = varname,
+                 paths = NULL,
+                 codes = NULL)
+  cfg.out = modifyList(temp.out, cfg.out, keep.null=TRUE)
+  
+  
+  # assemble and return the list
+  return(list(src=cfg.src, out=cfg.out))
+  # */
+}
+
+#' This function returns a nested list of the form `list(cfg.in, cfg.src)`, where `cfg.in` is a list containing info about the source
+#' urls, filenames, variable names, *etc*; and `cfg.src` contains info about the output files (post-processing). The idea is that
+#' in the 'src_<varname>.R' script we call this once with only `varname` specified to get a template list, whose entries are then 
+#' filled in as the script progresses. At the end we save this metadata to '<varname>.RData' in `data.dir`.
+#' 
+
+
 
 #+ echo=FALSE
 # Convert to markdown by running the following line (uncommented)...

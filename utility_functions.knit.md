@@ -19,100 +19,21 @@ library(here)
 
 # scrape URLS
 library(rvest)
-```
-
-```
-## Loading required package: xml2
-```
-
-```r
 library(RCurl)
 
 # handle tifs, shapefiles
 library(raster)
-```
-
-```
-## Loading required package: sp
-```
-
-```r
 library(rgdal)
-```
-
-```
-## rgdal: version: 1.5-8, (SVN revision 990)
-## Geospatial Data Abstraction Library extensions to R successfully loaded
-## Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
-## Path to GDAL shared files: C:/Program Files/R/R-4.0.1/library/rgdal/gdal
-## GDAL binary built with GEOS: TRUE 
-## Loaded PROJ runtime: Rel. 6.3.1, February 10th, 2020, [PJ_VERSION: 631]
-## Path to PROJ shared files: C:/Program Files/R/R-4.0.1/library/rgdal/proj
-## Linking to sp version:1.4-2
-## To mute warnings of possible GDAL/OSR exportToProj4() degradation,
-## use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
-```
-
-```r
 library(gdalUtils)
 library(sf)
-```
-
-```
-## Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 6.3.1
-```
-
-```
-## 
-## Attaching package: 'sf'
-```
-
-```
-## The following object is masked from 'package:gdalUtils':
-## 
-##     gdal_rasterize
-```
-
-```r
 library(fasterize)
-```
 
-```
-## 
-## Attaching package: 'fasterize'
-```
-
-```
-## The following object is masked from 'package:graphics':
-## 
-##     plot
-```
-
-```
-## The following object is masked from 'package:base':
-## 
-##     plot
-```
-
-```r
 # plotting 
 library(quickPlot)
 library(ggplot2)
 
 # parallel execution
 library(doSNOW)
-```
-
-```
-## Loading required package: foreach
-```
-
-```
-## Loading required package: iterators
-```
-
-```
-## Loading required package: snow
 ```
 
 **Important user-defined parameters**
@@ -123,19 +44,14 @@ be aware of the default storage path:
 ```r
 # all downloaded source files and output files go here
 data.dir = here('data')
-dir.create(data.dir, recursive=TRUE)
 ```
 
-```
-## Warning in dir.create(data.dir, recursive = TRUE): 'H:\git-MPB\rasterbc\data' already exists
-```
-
-By default this is the subdirectory 'data' relative to the location of the R project file (.../rasterbc/data). 
+By default this is the subdirectory 'data' relative to the location of the R project file (...\\rasterbc\\data). 
 Around 60GB of data in total will be downloaded/written by the 'src_\*.R' scripts. Feel free to change this to another 
-path (*eg.* a drive with more free space), but be careful not to assign it to to an existing directory 
-as I do not check for existing files, so *anything already data.dir could get overwritten*.
+path (*eg.* a drive with more free space), but be careful about assigning it to an existing directory 
+as I do not check for existing files, so *anything already in data.dir could get overwritten*.
 
-Some of the rasterization jobs are very time-consuming. This can be sped up by running things in parallel 
+Some of the rasterization jobs are very time-consuming. This can be sped up by running things in parallel. 
 
 
 ```r
@@ -143,15 +59,15 @@ Some of the rasterization jobs are very time-consuming. This can be sped up by r
 n.cores = 3
 ```
 
-Rasterization of an NTS tile requires around 6GB. So with 3 cores going in parallel we need at least 18GB of RAM. 
-If you are encountering out-of-memory errors, consider reducing 'n.cores', or changing to code to parallelize over 
-smaller chunks (*eg.* the TRIM tiles within each NTS tile).
+Rasterization of an NTS tile requires around 6GB of memory. So with 3 cores going in parallel we need at least 18GB of RAM. 
+If you are encountering out-of-memory errors, consider reducing 'n.cores', or changing the code to parallelize over 
+smaller chunks (*eg.* the TRIM tiles within each NTS tile) via the `blocks.sf` argument below.
 
 **Convenience functions**
 
 
 ```r
-# blockwise/parallel rasterization of big datasets
+# blockwise/parallel rasterization of large shapefiles
 MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf=NULL, n.cores=1) 
 {
   # rasterizes the input shapefile poly.sf (a POLYGON or MULTIPOLYGON) as GeoTiff written to 
@@ -164,13 +80,33 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
 ```
 
 This works by calling `fasterize::fasterize` (with `fun='any'`) on the polygons in `poly.sf` to make a presence/absence 
-layer at `aggr.factor` times higher resolution than `mask.tif`. This high-res layer is then downsampled (by averaging 
+layer at `aggr.factor` times higher resolution than `mask.tif`. This high-resolution layer is then downsampled (by averaging 
 with `gdalwarp`) to the desired output resolution. 
 
 `blocks.sf` allows large jobs to be done in parallel, by providing 
 a partition to split the work over, and (optionally) merging everything together at the end using `gdalUtils::mosaic_rasters`. 
-Here we process the NTS tiles 3 at a time (`n.cores`=3), and theres no need to merge the result because this tiling is how we 
-want the data split up in the end.
+
+After downloading and processing each data collection, I store the metadata in a big nested list structure:
+
+
+```r
+# metadata list builder for different sources
+MPB_metadata = function(varname, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
+{
+  # If called with varname only, creates the storage directory and
+  # returns a (mostly empty) list with entries to be filled in later.
+  # If cfg.in is specified, then elements in cfg.src and/or cfg.out 
+  # which are missing from cfg.in are added to the output list. 
+  
+  # (contents below are hidden from markdown: see utility_functions.R for details)
+}
+```
+
+This function returns a nested list of the form `list(cfg.in, cfg.src)`, where `cfg.in` is a list containing info about the source
+urls, filenames, variable names, *etc*; and `cfg.src` contains info about the output files (post-processing). The idea is that
+in the 'src_<varname>.R' script we call this once with only `varname` specified to get a template list, whose entries are then 
+filled in as the script progresses. At the end we save this metadata to '<varname>.RData' in `data.dir`.
+
 
 
 
