@@ -6,6 +6,7 @@
 #' ---
 #' 
 #' 
+<<<<<<< HEAD
 #' This loads required packages, sets up parameters, and defines some helper functions. It is sourced at
 #' the beginning of all of the individual downloading/pre-processing scripts. 
 #' 
@@ -33,7 +34,6 @@ library(ggplot2)
 # parallel execution
 library(doSNOW)
 
-
 #' **important user-defined parameters**
 #' 
 #' define/create a directory for storage of all downloaded source files and output files. 
@@ -44,11 +44,6 @@ data.dir = here('data')
 #' but be careful not to assign it to to an existing directory as I do not check for existing files, so *anything already in 
 #' data.dir could get overwritten*.
 #'
-
-
-
-
-
 
 #+ echo=FALSE
 # Convert to markdown by running the following line (uncommented)...
