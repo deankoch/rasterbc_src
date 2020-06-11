@@ -14,20 +14,87 @@ the beginning of all of the individual downloading/pre-processing scripts.
 
 
 ```r
-# provides sensible guess for working directory
+# identify working directory
 library(here)
 
-# scraping
+# scrape URLS
 library(rvest)
+```
+
+```
+## Loading required package: xml2
+```
+
+```r
 library(RCurl)
 
-# handling tifs, shapefiles
+# handle tifs, shapefiles
 library(raster)
+```
+
+```
+## Loading required package: sp
+```
+
+```r
 library(rgdal)
+```
+
+```
+## rgdal: version: 1.5-8, (SVN revision 990)
+## Geospatial Data Abstraction Library extensions to R successfully loaded
+## Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+## Path to GDAL shared files: C:/Program Files/R/R-4.0.1/library/rgdal/gdal
+## GDAL binary built with GEOS: TRUE 
+## Loaded PROJ runtime: Rel. 6.3.1, February 10th, 2020, [PJ_VERSION: 631]
+## Path to PROJ shared files: C:/Program Files/R/R-4.0.1/library/rgdal/proj
+## Linking to sp version:1.4-2
+## To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+## use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+```
+
+```r
 library(gdalUtils)
 library(sf)
-library(fasterize)
+```
 
+```
+## Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 6.3.1
+```
+
+```
+## 
+## Attaching package: 'sf'
+```
+
+```
+## The following object is masked from 'package:gdalUtils':
+## 
+##     gdal_rasterize
+```
+
+```r
+library(fasterize)
+```
+
+```
+## 
+## Attaching package: 'fasterize'
+```
+
+```
+## The following object is masked from 'package:graphics':
+## 
+##     plot
+```
+
+```
+## The following object is masked from 'package:base':
+## 
+##     plot
+```
+
+```r
 # plotting 
 library(quickPlot)
 library(ggplot2)
@@ -36,14 +103,31 @@ library(ggplot2)
 library(doSNOW)
 ```
 
+```
+## Loading required package: foreach
+```
+
+```
+## Loading required package: iterators
+```
+
+```
+## Loading required package: snow
+```
+
 **Important user-defined parameters**
 
 be aware of the default storage path:
 
 
 ```r
-# define/create a directory for storage of all downloaded source files and output files 
+# all downloaded source files and output files go here
 data.dir = here('data')
+dir.create(data.dir, recursive=TRUE)
+```
+
+```
+## Warning in dir.create(data.dir, recursive = TRUE): 'H:\git-MPB\rasterbc\data' already exists
 ```
 
 By default this is the subdirectory 'data' relative to the location of the R project file (.../rasterbc/data). 
@@ -51,6 +135,7 @@ Around 60GB of data in total will be downloaded/written by the 'src_\*.R' script
 path (*eg.* a drive with more free space), but be careful not to assign it to to an existing directory 
 as I do not check for existing files, so *anything already data.dir could get overwritten*.
 
+Some of the rasterization jobs are very time-consuming. This can be sped up by running things in parallel 
 
 
 ```r
@@ -58,7 +143,9 @@ as I do not check for existing files, so *anything already data.dir could get ov
 n.cores = 3
 ```
 
-Rasterization requires around 6GB or memory per core. Consider reducing 'n.cores' if you are encountering out-of-memory errors.
+Rasterization of an NTS tile requires around 6GB. So with 3 cores going in parallel we need at least 18GB of RAM. 
+If you are encountering out-of-memory errors, consider reducing 'n.cores', or changing to code to parallelize over 
+smaller chunks (*eg.* the TRIM tiles within each NTS tile).
 
 **Convenience functions**
 
@@ -81,7 +168,9 @@ layer at `aggr.factor` times higher resolution than `mask.tif`. This high-res la
 with `gdalwarp`) to the desired output resolution. 
 
 `blocks.sf` allows large jobs to be done in parallel, by providing 
-a partition to split the work over, and merging everything together at the end using `gdalUtils::mosaic_rasters`. 
+a partition to split the work over, and (optionally) merging everything together at the end using `gdalUtils::mosaic_rasters`. 
+Here we process the NTS tiles 3 at a time (`n.cores`=3), and theres no need to merge the result because this tiling is how we 
+want the data split up in the end.
 
 
 

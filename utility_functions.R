@@ -13,14 +13,14 @@
 #' **The following packages are required:**
 #' 
 
-# provides sensible guess for working directory
+# identify working directory
 library(here)
 
-# scraping
+# scrape URLS
 library(rvest)
 library(RCurl)
 
-# handling tifs, shapefiles
+# handle tifs, shapefiles
 library(raster)
 library(rgdal)
 library(gdalUtils)
@@ -37,18 +37,22 @@ library(doSNOW)
 #' **Important user-defined parameters**
 #' 
 #' be aware of the default storage path:
-# define/create a directory for storage of all downloaded source files and output files 
+# all downloaded source files and output files go here
 data.dir = here('data')
+dir.create(data.dir, recursive=TRUE)
 
 #' By default this is the subdirectory 'data' relative to the location of the R project file (.../rasterbc/data). 
 #' Around 60GB of data in total will be downloaded/written by the 'src_\*.R' scripts. Feel free to change this to another 
 #' path (*eg.* a drive with more free space), but be careful not to assign it to to an existing directory 
 #' as I do not check for existing files, so *anything already data.dir could get overwritten*.
 #'
+#' Some of the rasterization jobs are very time-consuming. This can be sped up by running things in parallel 
 
 #  set the number of cores to use with doSNOW (set to 1 if doSNOW/multicore not available)
 n.cores = 3
-#' Rasterization requires around 6GB or memory per core. Consider reducing 'n.cores' if you are encountering out-of-memory errors.
+#' Rasterization of an NTS tile requires around 6GB. So with 3 cores going in parallel we need at least 18GB of RAM. 
+#' If you are encountering out-of-memory errors, consider reducing 'n.cores', or changing to code to parallelize over 
+#' smaller chunks (*eg.* the TRIM tiles within each NTS tile).
 #' 
 
 #' **Convenience functions**
@@ -215,7 +219,9 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
 #' with `gdalwarp`) to the desired output resolution. 
 #' 
 #' `blocks.sf` allows large jobs to be done in parallel, by providing 
-#' a partition to split the work over, and merging everything together at the end using `gdalUtils::mosaic_rasters`. 
+#' a partition to split the work over, and (optionally) merging everything together at the end using `gdalUtils::mosaic_rasters`. 
+#' Here we process the NTS tiles 3 at a time (`n.cores`=3), and theres no need to merge the result because this tiling is how we 
+#' want the data split up in the end.
 
 #+ echo=FALSE
 # Convert to markdown by running the following line (uncommented)...
