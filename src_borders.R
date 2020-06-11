@@ -18,7 +18,7 @@
 #' so users can combine data from all three sources without fooling around with projection and alignment. 
 #' 
 
-
+library(here)
 
 # some more comment testing
 # /* testin
@@ -31,6 +31,6 @@ summary(VADeaths)
 
 #+ echo=FALSE
 # Convert to markdown by running the following line (uncommented)...
-# rmarkdown::render(here('src_borders.R'), run_pandoc=FALSE, clean=TRUE)
+# rmarkdown::render(here('src_borders.R'), output_file=here('src_borders.md'), run_pandoc=FALSE, clean=TRUE)
 # rmarkdown::render(here('src_borders.R'))
        
