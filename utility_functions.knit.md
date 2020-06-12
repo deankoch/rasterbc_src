@@ -91,12 +91,12 @@ After downloading and processing each data collection, I store the metadata in a
 
 ```r
 # metadata list builder for different sources
-MPB_metadata = function(varname, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
+MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
 {
-  # If called with varname only, creates the storage directory and
-  # returns a (mostly empty) list with entries to be filled in later.
-  # If cfg.in is specified, then elements in cfg.src and/or cfg.out 
-  # which are missing from cfg.in are added to the output list. 
+  # If called with 'collection' only, creates the storage directory and returns a 
+  # (mostly empty) list with entries to be filled in later. If cfg.in is specified, 
+  # then elements in cfg.src and/or cfg.out which are missing from cfg.in are added to 
+  # the output list. 
   
   # (contents below are hidden from markdown: see utility_functions.R for details)
 }
@@ -104,8 +104,8 @@ MPB_metadata = function(varname, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
 
 This function returns a nested list of the form `list(cfg.in, cfg.src)`, where `cfg.in` is a list containing info about the source
 urls, filenames, variable names, *etc*; and `cfg.src` contains info about the output files (post-processing). The idea is that
-in the 'src_<varname>.R' script we call this once with only `varname` specified to get a template list, whose entries are then 
-filled in as the script progresses. At the end we save this metadata to '<varname>.RData' in `data.dir`.
+in the 'src_\<collection\>.R' script we call this once with only `collection` specified to get a template list, whose entries are then 
+filled in as the script progresses. At the end we save this metadata to '\<collection\>.RData' in `data.dir`.
 
 
 

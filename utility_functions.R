@@ -234,44 +234,66 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
 
 #' After downloading and processing each data collection, I store the metadata in a big nested list structure:
 # metadata list builder for different sources
-MPB_metadata = function(varname, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
+MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
 {
-  # If called with varname only, creates the storage directory and
-  # returns a (mostly empty) list with entries to be filled in later.
-  # If cfg.in is specified, then elements in cfg.src and/or cfg.out 
-  # which are missing from cfg.in are added to the output list. 
+  # If called with 'collection' only, creates the storage directory and returns a 
+  # (mostly empty) list with entries to be filled in later. If cfg.in is specified, 
+  # then elements in cfg.src and/or cfg.out which are missing from cfg.in are added to 
+  # the output list. 
   
   # (contents below are hidden from markdown: see utility_functions.R for details)
   # /*
   
   # define storage directory for source files (creating it if necessary)
-  subdir.out = file.path(data.dir, varname, 'source')
+  subdir.out = file.path(data.dir, collection, 'source')
   if(!dir.exists(subdir.out))
   {
     dir.create(subdir.out, recursive=TRUE)
-    print(paste(varname, 'subdirectory created'))
+    print(paste(collection, 'subdirectory created'))
     
   } else {
   
-    print(paste(varname, 'subdirectory exists'))
+    print(paste(collection, 'subdirectory exists'))
   }
   print(paste('source data storage:', subdir.out))
   
   # create the source metadata list
-  temp.src = list(url = NULL,
-                  fns = NULL,
+  temp.src = list(web = NULL,
+                  fname = NULL,
                   path = subdir.out)
   
-  cfg.src = modifyList(temp.src, cfg.src, keep.null=TRUE)
-  cfg.src = modifyList(temp.src, cfg.src, keep.null=TRUE)
-  
   # create the output data metadata list
-  temp.out = list(subdir = varname,
-                 paths = NULL,
-                 codes = NULL)
-  cfg.out = modifyList(temp.out, cfg.out, keep.null=TRUE)
+  temp.out = list(subdir = collection,
+                 path = list(shp=NULL, 
+                             tif=NULL),
+                 code = NULL)
   
-  
+  # udpate these lists as needed
+  if(!is.null(cfg.in)) {
+
+    # modify entries of cfg.src
+    if(is.null(cfg.src)) {
+      
+      cfg.src = temp.src
+    } 
+    temp.src = modifyList(temp.src, cfg.in$src, keep.null=TRUE) 
+    cfg.src = modifyList(temp.src, cfg.src, keep.null=TRUE) 
+    
+    # modify entries of cfg.out
+    if(is.null(cfg.out)) {
+     
+      cfg.out = temp.out 
+    }
+    temp.out = modifyList(temp.out, cfg.in$out, keep.null=TRUE) 
+    cfg.out = modifyList(temp.out, cfg.out, keep.null=TRUE) 
+
+  } else {
+    
+    # nothing to modify, return defaults
+    cfg.src = temp.src
+    cfg.out = temp.out
+  }
+
   # assemble and return the list
   return(list(src=cfg.src, out=cfg.out))
   # */
@@ -279,13 +301,14 @@ MPB_metadata = function(varname, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
 
 #' This function returns a nested list of the form `list(cfg.in, cfg.src)`, where `cfg.in` is a list containing info about the source
 #' urls, filenames, variable names, *etc*; and `cfg.src` contains info about the output files (post-processing). The idea is that
-#' in the 'src_<varname>.R' script we call this once with only `varname` specified to get a template list, whose entries are then 
-#' filled in as the script progresses. At the end we save this metadata to '<varname>.RData' in `data.dir`.
+#' in the 'src_\<collection\>.R' script we call this once with only `collection` specified to get a template list, whose entries are then 
+#' filled in as the script progresses. At the end we save this metadata to '\<collection\>.RData' in `data.dir`.
 #' 
 
 
 
-#+ echo=FALSE
+#+ include=FALSE
 # Convert to markdown by running the following line (uncommented)...
 # rmarkdown::render(here('utility_functions.R'), run_pandoc=FALSE, clean=TRUE)
+# ... or to html ...
 # rmarkdown::render(here('utility_functions.R'))
