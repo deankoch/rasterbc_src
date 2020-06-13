@@ -128,6 +128,7 @@ if(!all(file.exists(cfg$src$fname)) | force.download)
 **processing**
 
 
+First, prepare a mask for in-province pixels and save it to disk:
 
 
 ```r
@@ -157,15 +158,12 @@ snrc.sf = sf::st_transform(sf::st_read(dsn=cfg$src$fname['snrc']), MPB_crs()$eps
 ## geographic CRS: NAD83(CSRS98)
 ```
 
-First, prepare a mask for in-province pixels and save it to disk:
-
-
 ```r
 # create a mask for in-province pixels (setting reference extent and resolution)
 ref.tif = raster::crop(MPB_crs()$tif, prov.sf[prov.sf$PROV_TERRI=='BC',1], snap='out')
 bc.sf = prov.sf[prov.sf$PROV_TERRI=='BC',1]
 
-# replace character column with numeric, rasterize, and write 
+# replace character column with numeric, rasterize, and write (20.2 MB) 
 ```
 
 ```r
@@ -196,7 +194,7 @@ plot(st_geometry(snrc.sf)[bc.blocks.idx & !omit.blocks.idx], add=TRUE)
 plot(st_geometry(snrc.sf)[snrc.sf$NTS_SNRC %in% missing.blocks], add=TRUE, col='blue')
 ```
 
-![](src_borders_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](src_borders_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ```r
 incl.blocks.idx = bc.blocks.idx & !omit.blocks.idx | snrc.sf$NTS_SNRC %in% missing.blocks
@@ -220,16 +218,35 @@ The NTS/SNRC codes in `cfg$out$code` should match those in the NTS mapsheet coll
 snrc.sf = sf::st_read(cfg$out$path$shp['snrc'])
 prov.sf = sf::st_read(cfg$out$path$shp['prov'])
 cfg$out$code = snrc.sf$NTS_SN
+```
+
+Create `latitude`, `longitude` layers via `sp` package (slow step, taking around 5 minutes), then save to disk (285 MB, 352 MB)
 
 
-#
+```r
+# load the in-province mask (raster), convert to points dataframe 
+bc.mask.tif = raster::raster(cfg$out$path$tif$full['prov'])
+bc.coords.df = data.frame(raster::coordinates(bc.mask.tif))
+sp::coordinates(bc.coords.df) = c('x', 'y')
+sp::proj4string(bc.coords.df) = raster::crs(bc.mask.tif)
+
+# reproject to lat/long, apply mask, and write
+bc.coords.df = sp::spTransform(bc.coords.df, CRS=sp::CRS('+proj=longlat +ellps=GRS80'))
+raster::writeRaster(raster::mask(raster::setValues(bc.mask.tif, bc.coords.df$y), bc.mask.tif), cfg$out$path$tif$full['latitude'], overwrite=TRUE)
+raster::writeRaster(raster::mask(raster::setValues(bc.mask.tif, bc.coords.df$x), bc.mask.tif), cfg$out$path$tif$full['longitude'], overwrite=TRUE)
+```
+
+Finally, split these layers up into mapsheets corresponding to the NTS/SNRC codes
 
 
-# convert relevant character-type features to numeric, store coding
-# convert relevant character-type features to numeric, store coding
-
-
-#bc.mask.tif = fasterize::fasterize(prov.sf[prov.sf$PROV_TERRI=='BC',1], ref.pine.tif, 'PROV_TERRI', 'any')
+```r
+# To do: add block subfolder to data/*/ in utility_functions.R
+# To do: add the output filenames earlier in this script
+# To do: build a loop that does the crop/save. Remember to reload rasters where eval=FALSE
+# To do: write RData file with final cfg list
+# par(mfrow)
+# plot(raster(cfg$out$path$tif$full['latitude']))
+# plot(raster(cfg$out$path$tif$full['longitude']))
 ```
 
 
