@@ -75,7 +75,7 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
   # (crs, resolution, extent), and its NA values (if any) are used to mask the output (non-NA
   # are ignored).
   
-  # (contents below are hidden from markdown: see utility_functions.R for details)
+  # (some code below hidden from markdown:)
   # /*
   
   # blocks.sf (a POLYGON or MULTIPOLYGON) optionally supplies a set of polygons (subsets of the 
@@ -241,7 +241,7 @@ MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
   # then elements in cfg.src and/or cfg.out which are missing from cfg.in are added to 
   # the output list. 
   
-  # (contents below are hidden from markdown: see utility_functions.R for details)
+  # (some code below hidden from markdown:)
   # /*
   
   # define storage directory for source files (creating it if necessary)
@@ -305,7 +305,40 @@ MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
 #' filled in as the script progresses. At the end we save this metadata to '\<collection\>.RData' in `data.dir`.
 #' 
 
+#' Each layer uses the same Albers projection and NAD83 datum, and the same grid layout as
+#' <a href="http://hectaresBC.org" target="_blank">hectaresBC</a>,
+#' the parameters of which are hard-coded in this convenience function:
+# defines the coordinate reference system (CRS)
+MPB_crs = function()
+{
+  # Returns a list containing various objects related to the reference system.
+  # extent, resolution, dimensions are based on hectaresBC, and standard projection/datum for BC
+  
+  # EPSG code for CRS, resolution in metres, and alignment parameters for grid
+  epsg.ref = 3005
+  res.ref = c(100,100)
+  xmin = 159587.5
+  xmax = 1881188
+  ymin = 173787.5
+  ymax = 1748188
+  
+  # (some code below hidden from markdown:)
+  # /*
+  
+  # build some raster/sf objects from this information
+  extent.ref = extent(x=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
+  ref.tif = raster(crs=st_crs(epsg.ref)$proj4string, ext=extent.ref, res=res.ref, vals=NULL)
+  
+  # construct/return the list
+  list(epsg = epsg.ref,
+       proj4 = st_crs(epsg.ref)$proj4string,
+       ext = extent.ref,
+       res = res.ref,
+       tif = ref.tif)
+  # */
+}
 
+#' Users who wish to use a different reference system may change these parameters before running the 'src_\*.R' scripts.
 
 #+ include=FALSE
 # Convert to markdown by running the following line (uncommented)...

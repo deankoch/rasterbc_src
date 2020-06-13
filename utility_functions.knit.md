@@ -75,7 +75,7 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
   # (crs, resolution, extent), and its NA values (if any) are used to mask the output (non-NA
   # are ignored).
   
-  # (contents below are hidden from markdown: see utility_functions.R for details)
+  # (some code below hidden from markdown:)
 }
 ```
 
@@ -98,7 +98,7 @@ MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
   # then elements in cfg.src and/or cfg.out which are missing from cfg.in are added to 
   # the output list. 
   
-  # (contents below are hidden from markdown: see utility_functions.R for details)
+  # (some code below hidden from markdown:)
 }
 ```
 
@@ -107,6 +107,31 @@ urls, filenames, variable names, *etc*; and `cfg.src` contains info about the ou
 in the 'src_\<collection\>.R' script we call this once with only `collection` specified to get a template list, whose entries are then 
 filled in as the script progresses. At the end we save this metadata to '\<collection\>.RData' in `data.dir`.
 
+Each layer uses the same Albers projection and NAD83 datum, and the same grid layout as
+<a href="http://hectaresBC.org" target="_blank">hectaresBC</a>,
+the parameters of which are hard-coded in this convenience function:
+
+
+```r
+# defines the coordinate reference system (CRS)
+MPB_crs = function()
+{
+  # Returns a list containing various objects related to the reference system.
+  # extent, resolution, dimensions are based on hectaresBC, and standard projection/datum for BC
+  
+  # EPSG code for CRS, resolution in metres, and alignment parameters for grid
+  epsg.ref = 3005
+  res.ref = c(100,100)
+  xmin = 159587.5
+  xmax = 1881188
+  ymin = 173787.5
+  ymax = 1748188
+  
+  # (some code below hidden from markdown:)
+}
+```
+
+Users who wish to use a different reference system may change these parameters before running the 'src_\*.R' scripts.
 
 
 
