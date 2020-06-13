@@ -107,7 +107,9 @@ urls, filenames, variable names, *etc*; and `cfg.src` contains info about the ou
 in the 'src_\<collection\>.R' script we call this once with only `collection` specified to get a template list, whose entries are then 
 filled in as the script progresses. At the end we save this metadata to '\<collection\>.RData' in `data.dir`.
 
-Each layer uses the same Albers projection and NAD83 datum, and the same grid layout as
+Each layer uses the same 
+<a href="https://spatialreference.org/ref/epsg/nad83-bc-albers/" target="_blank">Albers projection and NAD83 datum</a>, 
+and a cropped version of the grid layout in
 <a href="http://hectaresBC.org" target="_blank">hectaresBC</a>,
 the parameters of which are hard-coded in this convenience function:
 
@@ -122,10 +124,10 @@ MPB_crs = function()
   # EPSG code for CRS, resolution in metres, and alignment parameters for grid
   epsg.ref = 3005
   res.ref = c(100,100)
-  xmin = 159587.5
-  xmax = 1881188
-  ymin = 173787.5
-  ymax = 1748188
+  xmin = 273287.5
+  xmax = 1870688
+  ymin = 359688
+  ymax = 1735788
   
   # (some code below hidden from markdown:)
 }

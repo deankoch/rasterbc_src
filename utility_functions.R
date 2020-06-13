@@ -265,7 +265,8 @@ MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
   # create the output data metadata list
   temp.out = list(subdir = collection,
                  path = list(shp=NULL, 
-                             tif=NULL),
+                             tif=list(full=NULL,
+                                      block=NULL)),
                  code = NULL)
   
   # udpate these lists as needed
@@ -305,7 +306,9 @@ MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
 #' filled in as the script progresses. At the end we save this metadata to '\<collection\>.RData' in `data.dir`.
 #' 
 
-#' Each layer uses the same Albers projection and NAD83 datum, and the same grid layout as
+#' Each layer uses the same 
+#' <a href="https://spatialreference.org/ref/epsg/nad83-bc-albers/" target="_blank">Albers projection and NAD83 datum</a>, 
+#' and a cropped version of the grid layout in
 #' <a href="http://hectaresBC.org" target="_blank">hectaresBC</a>,
 #' the parameters of which are hard-coded in this convenience function:
 # defines the coordinate reference system (CRS)
@@ -317,17 +320,17 @@ MPB_crs = function()
   # EPSG code for CRS, resolution in metres, and alignment parameters for grid
   epsg.ref = 3005
   res.ref = c(100,100)
-  xmin = 159587.5
-  xmax = 1881188
-  ymin = 173787.5
-  ymax = 1748188
+  xmin = 273287.5
+  xmax = 1870688
+  ymin = 359688
+  ymax = 1735788
   
   # (some code below hidden from markdown:)
   # /*
   
   # build some raster/sf objects from this information
-  extent.ref = extent(x=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
-  ref.tif = raster(crs=st_crs(epsg.ref)$proj4string, ext=extent.ref, res=res.ref, vals=NULL)
+  extent.ref = raster::extent(x=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
+  ref.tif = raster::raster(crs=sf::st_crs(epsg.ref)$proj4string, ext=extent.ref, res=res.ref, vals=NULL)
   
   # construct/return the list
   list(epsg = epsg.ref,
