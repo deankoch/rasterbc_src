@@ -245,29 +245,42 @@ MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
   # /*
   
   # define storage directory for source files (creating it if necessary)
-  subdir.out = file.path(data.dir, collection, 'source')
-  if(!dir.exists(subdir.out))
+  subdir.src = file.path(data.dir, collection, 'source')
+  if(!dir.exists(subdir.src))
   {
-    dir.create(subdir.out, recursive=TRUE)
+    dir.create(subdir.src, recursive=TRUE)
     print(paste(collection, 'subdirectory created'))
     
   } else {
   
     print(paste(collection, 'subdirectory exists'))
   }
-  print(paste('source data storage:', subdir.out))
+  print(paste('source data storage:', subdir.src))
+  
+  # define storage directory for mapsheet files (creating it if necessary)
+  subdir.block = file.path(data.dir, collection, 'blocks')
+  if(!dir.exists(subdir.block))
+  {
+    dir.create(subdir.block, recursive=TRUE)
+    print(paste(collection, 'subdirectory created'))
+    
+  } else {
+    
+    print(paste(collection, 'subdirectory exists'))
+  }
+  print(paste('source data storage:', subdir.block))
   
   # create the source metadata list
   temp.src = list(web = NULL,
                   fname = NULL,
-                  path = subdir.out)
+                  dir = subdir.src)
   
   # create the output data metadata list
-  temp.out = list(subdir = collection,
-                 path = list(shp=NULL, 
-                             tif=list(full=NULL,
-                                      block=NULL)),
-                 code = NULL)
+  temp.out = list(name = collection,
+                  dir.block = subdir.block,
+                  fname = list(shp=NULL,
+                               tif=list(full=NULL, block=NULL)),
+                  code = NULL)
   
   # udpate these lists as needed
   if(!is.null(cfg.in)) {

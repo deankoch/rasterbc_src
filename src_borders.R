@@ -20,6 +20,7 @@ source(here('utility_functions.R'))
 # create the source data directory and metadata list
 collection = 'borders'
 cfg = MPB_metadata(collection)
+cfg.filename = file.path(data.dir, paste0(collection, '.rds'))
 
 #'
 #' **source information**
@@ -59,11 +60,10 @@ cfg = MPB_metadata(collection, cfg.in=cfg, cfg.src=cfg.src)
 
 # set up the source and output filenames
 varnames = setNames(nm=c(names(cfg$src$fname.prefix), lat='latitude', long='longitude'))
-cfg$src$fname = setNames(paste0(file.path(cfg$src$path, cfg$src$fname.prefix), '.shp'), varnames[c('prov', 'snrc')])
-cfg$out$path$shp = setNames(paste0(file.path(data.dir, cfg$out$subdir, varnames[c('prov', 'snrc')]), '_std.shp'), varnames[c('prov', 'snrc')])
-prefix.tif = setNames(file.path(data.dir, cfg$out$subdir, varnames[!(varnames %in% 'snrc')]), varnames[!(varnames %in% 'snrc')])
-cfg$out$path$tif$full = setNames(paste0(prefix.tif, '.tif'), varnames[!(varnames %in% 'snrc')])
-
+cfg$src$fname = setNames(paste0(file.path(cfg$src$dir, cfg$src$fname.prefix), '.shp'), varnames[c('prov', 'snrc')])
+cfg$out$fname$shp = setNames(paste0(file.path(data.dir, cfg$out$name, varnames[c('prov', 'snrc')]), '_std.shp'), varnames[c('prov', 'snrc')])
+prefix.tif = setNames(file.path(data.dir, cfg$out$name, varnames[!(varnames %in% 'snrc')]), varnames[!(varnames %in% 'snrc')])
+cfg$out$fname$tif$full = setNames(paste0(prefix.tif, '.tif'), varnames[!(varnames %in% 'snrc')])
 
 #' `prefix.tif` gives the first part of the filenames that will later be assigned to each of the mapsheets, along with a suffix
 #' of the form '_\<SNRC-code\>.tif'. First we need to download and open the SNRC shapefile to find out which mapsheet codes are relevant.
@@ -77,9 +77,9 @@ if(!all(file.exists(cfg$src$fname)) | force.download)
 {
   #+ eval=FALSE
   # download the zip to temporary file (12.2 MB), extract to disk
-  borders.tmp = tempfile('borders_temp', cfg$src$path, '.zip')
+  borders.tmp = tempfile('borders_temp', cfg$src$dir, '.zip')
   download.file(url=cfg$src$web, destfile=borders.tmp, mode='wb')
-  borders.paths = unzip(borders.tmp, exdir=cfg$src$path)
+  borders.paths = unzip(borders.tmp, exdir=cfg$src$dir)
   unlink(borders.tmp)
   
   #' verify that the two source files listed in `cfg$src$fname` are among the extracted files
@@ -110,7 +110,7 @@ bc.sf = prov.sf[prov.sf$PROV_TERRI=='BC',1]
 #+ eval=FALSE
 bc.sf$PROV_TERRI = 0
 bc.mask.tif = fasterize::fasterize(sf=bc.sf, raster=ref.tif, field='PROV_TERRI', fun='any')
-raster::writeRaster(bc.mask.tif, cfg$out$path$tif$full['prov'], overwrite=TRUE)
+raster::writeRaster(bc.mask.tif, cfg$out$fname$tif$full['prov'], overwrite=TRUE)
 
 #' Next, build a list of NTS/SNRC codes that overlap with BC landmass
 
@@ -131,39 +131,66 @@ incl.features.idx = which(names(snrc.sf) %in% cfg$src$feat.name)
 
 #' ... and save reprojected/simplified version of the source shapefile data (1.1 MB).
 #+ eval=FALSE
-sf::st_write(snrc.sf[incl.blocks.idx, incl.features.idx], cfg$out$path$shp['snrc'], append=FALSE)
-sf::st_write(bc.sf, cfg$out$path$shp['prov'], append=FALSE)
+sf::st_write(snrc.sf[incl.blocks.idx, incl.features.idx], cfg$out$fname$shp['snrc'], append=FALSE)
+sf::st_write(bc.sf, cfg$out$fname$shp['prov'], append=FALSE)
 
 #' Now reload these files to overwrite the (larger) source shapefiles in memory: 
 #' The NTS/SNRC codes in `cfg$out$code` should match those in the NTS mapsheet collection for BC
 #' (<a href="https://ftp.maps.canada.ca/pub/nrcan_rncan/vector/index/index_pdf/NTS-SNRC_Index%205_British_Columbia_300dpi.pdf" target="_blank">PDF link</a>).
 #+ results='hide'
-snrc.sf = sf::st_read(cfg$out$path$shp['snrc'])
-prov.sf = sf::st_read(cfg$out$path$shp['prov'])
+snrc.sf = sf::st_read(cfg$out$fname$shp['snrc'])
+prov.sf = sf::st_read(cfg$out$fname$shp['prov'])
 cfg$out$code = snrc.sf$NTS_SN
 
-#' Create `latitude`, `longitude` layers via `sp` package (slow step, taking around 5 minutes), then save to disk (285 MB, 352 MB)
+#' Create `latitude`, `longitude` layers via `sp` package (slow step, taking around 5 minutes), then save to disk (622 MB)
 #+ eval=FALSE
 # load the in-province mask (raster), convert to points dataframe 
-bc.mask.tif = raster::raster(cfg$out$path$tif$full['prov'])
+bc.mask.tif = raster::raster(cfg$out$fname$tif$full['prov'])
 bc.coords.df = data.frame(raster::coordinates(bc.mask.tif))
 sp::coordinates(bc.coords.df) = c('x', 'y')
 sp::proj4string(bc.coords.df) = raster::crs(bc.mask.tif)
 
 # reproject to lat/long, apply mask, and write
 bc.coords.df = sp::spTransform(bc.coords.df, CRS=sp::CRS('+proj=longlat +ellps=GRS80'))
-raster::writeRaster(raster::mask(raster::setValues(bc.mask.tif, bc.coords.df$y), bc.mask.tif), cfg$out$path$tif$full['latitude'], overwrite=TRUE)
-raster::writeRaster(raster::mask(raster::setValues(bc.mask.tif, bc.coords.df$x), bc.mask.tif), cfg$out$path$tif$full['longitude'], overwrite=TRUE)
+raster::writeRaster(raster::mask(raster::setValues(bc.mask.tif, bc.coords.df$y), bc.mask.tif), cfg$out$fname$tif$full['latitude'], overwrite=TRUE)
+raster::writeRaster(raster::mask(raster::setValues(bc.mask.tif, bc.coords.df$x), bc.mask.tif), cfg$out$fname$tif$full['longitude'], overwrite=TRUE)
 
-#' Finally, split these layers up into mapsheets corresponding to the NTS/SNRC codes
-# To do: add block subfolder to data/*/ in utility_functions.R
-# To do: add the output filenames earlier in this script
-# To do: build a loop that does the crop/save. Remember to reload rasters where eval=FALSE
-# To do: write RData file with final cfg list
-# par(mfrow)
-# plot(raster(cfg$out$path$tif$full['latitude']))
-# plot(raster(cfg$out$path$tif$full['longitude']))
+#' Finally, split these layers up into mapsheets corresponding to the NTS/SNRC codes (638 MB)
+#' 
 
+# reload the mapsheet polygons 
+snrc.sf = sf::st_read(cfg$out$fname$shp['snrc'])
+
+# define paths to output mapsheets
+prefix.tif = setNames(file.path(cfg$out$dir.block, varnames[!(varnames %in% 'snrc')]), varnames[!(varnames %in% 'snrc')])
+cfg$out$fname$tif$block = lapply(prefix.tif, function(varpath) setNames(paste0(varpath, '_', cfg$out$code, '.tif'), cfg$out$code))
+
+# loop over layers to save
+#+ eval=FALSE
+pb = txtProgressBar(min=1, max=length(cfg$out$code), style=3)
+for(idx.varname in 1:length(cfg$out$fname$tif$block))
+{
+  # load the full BC raster
+  print(paste0('splitting ', cfg$out$fname$tif$full[idx.varname], ' into mapsheets...'))
+  temp.tif = raster::raster(cfg$out$fname$tif$full[idx.varname])
+  
+  #loop over NTS/SNRC mapsheets, cropping full BC rasters and saving to disk 
+  for(idx.snrc in 1:length(cfg$out$code))
+  {
+    setTxtProgressBar(pb, idx.snrc)
+    dest.file = cfg$out$fname$tif$block[[idx.varname]][[idx.snrc]]
+    
+    # find bounding box for mapsheet, crop/mask raster and save 
+    block.sf = sf::st_geometry(snrc.sf[idx.snrc,])
+    block.bbox = raster::extent(sf::as_Spatial(block.sf))
+    cropped.temp.tif = raster::mask(raster::crop(temp.tif, block.bbox, snap='out'), sf::as_Spatial(block.sf))
+    raster::writeRaster(cropped.temp.tif, dest.file, overwrite=TRUE)
+  }
+}
+close(pb)
+
+#' The metadata list `cfg` is saved to `data.dir`.
+saveRDS(cfg, file=cfg.filename)
 
 #+ include=FALSE
 # Convert to markdown by running the following line (uncommented)...
