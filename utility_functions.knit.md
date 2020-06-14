@@ -135,5 +135,24 @@ MPB_crs = function()
 
 Users who wish to use a different reference system may change these parameters before running the 'src_\*.R' scripts.
 
+Most of the 'src_\*.R' scripts first create the raster layers for the full BC extent, before splitting them into smaller mapsheets.
+The following convenience function does the splitting, and returns a list of the filenames written
+
+
+```r
+# automated splitting of rasters into mapsheets
+MPB_split = function(cfg.in, snrc.sf) 
+{
+  # snrc.sf is the sf object containing the mapsheet polygons to loop over
+  # The function expects cfg.in$out$fname$tif$full to be a character vector of paths to 
+  # full-province raster layers. It loops over them, splitting each one (ie crop -> mask) 
+  # according the polygons in snrc.sf
+  
+  # (some code below hidden from markdown:)
+}
+```
+
+This function could be easily modified to split over any other tiling of the BC extent.
+
 
 

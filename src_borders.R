@@ -96,7 +96,7 @@ if(!all(file.exists(cfg$src$fname)) | force.download)
 #' 
 #' 
 
-#' First, prepare a mask for in-province pixels and save it to disk:
+#' First, prepare a mask for in-province pixels and save it to disk (20.2 MB):
 
 # load the provincial boundaries polygons and NTS/SNRC blocks, reprojecting to crs(bc.mask.tif)
 prov.sf = sf::st_transform(sf::st_read(dsn=cfg$src$fname['prov']), MPB_crs()$epsg) 
@@ -106,8 +106,8 @@ snrc.sf = sf::st_transform(sf::st_read(dsn=cfg$src$fname['snrc']), MPB_crs()$eps
 ref.tif = raster::crop(MPB_crs()$tif, prov.sf[prov.sf$PROV_TERRI=='BC',1], snap='out')
 bc.sf = prov.sf[prov.sf$PROV_TERRI=='BC',1]
 
-# replace character column with numeric, rasterize, and write (20.2 MB) 
 #+ eval=FALSE
+# replace character column with numeric, rasterize, and write
 bc.sf$PROV_TERRI = 0
 bc.mask.tif = fasterize::fasterize(sf=bc.sf, raster=ref.tif, field='PROV_TERRI', fun='any')
 raster::writeRaster(bc.mask.tif, cfg$out$fname$tif$full['prov'], overwrite=TRUE)
@@ -157,39 +157,16 @@ raster::writeRaster(raster::mask(raster::setValues(bc.mask.tif, bc.coords.df$x),
 
 #' Finally, split these layers up into mapsheets corresponding to the NTS/SNRC codes (638 MB)
 #' 
+#+ eval=FALSE
 
 # reload the mapsheet polygons 
 snrc.sf = sf::st_read(cfg$out$fname$shp['snrc'])
 
-# define paths to output mapsheets
-prefix.tif = setNames(file.path(cfg$out$dir.block, varnames[!(varnames %in% 'snrc')]), varnames[!(varnames %in% 'snrc')])
-cfg$out$fname$tif$block = lapply(prefix.tif, function(varpath) setNames(paste0(varpath, '_', cfg$out$code, '.tif'), cfg$out$code))
+# function call to crop and save blocks (writes )
+cfg.blocks = MPB_split(cfg, snrc.sf)
 
-# loop over layers to save
-#+ eval=FALSE
-pb = txtProgressBar(min=1, max=length(cfg$out$code), style=3)
-for(idx.varname in 1:length(cfg$out$fname$tif$block))
-{
-  # load the full BC raster
-  print(paste0('splitting ', cfg$out$fname$tif$full[idx.varname], ' into mapsheets...'))
-  temp.tif = raster::raster(cfg$out$fname$tif$full[idx.varname])
-  
-  #loop over NTS/SNRC mapsheets, cropping full BC rasters and saving to disk 
-  for(idx.snrc in 1:length(cfg$out$code))
-  {
-    setTxtProgressBar(pb, idx.snrc)
-    dest.file = cfg$out$fname$tif$block[[idx.varname]][[idx.snrc]]
-    
-    # find bounding box for mapsheet, crop/mask raster and save 
-    block.sf = sf::st_geometry(snrc.sf[idx.snrc,])
-    block.bbox = raster::extent(sf::as_Spatial(block.sf))
-    cropped.temp.tif = raster::mask(raster::crop(temp.tif, block.bbox, snap='out'), sf::as_Spatial(block.sf))
-    raster::writeRaster(cropped.temp.tif, dest.file, overwrite=TRUE)
-  }
-}
-close(pb)
-
-#' The metadata list `cfg` is saved to `data.dir`.
+# update metadata list `cfg` and save it to `data.dir`.
+cfg = MPB_metadata(collection, cfg.in=cfg, cfg.out=list(fname=list(tif=list(block=cfg.blocks))))
 saveRDS(cfg, file=cfg.filename)
 
 #+ include=FALSE

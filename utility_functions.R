@@ -268,7 +268,7 @@ MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
     
     print(paste(collection, 'subdirectory exists'))
   }
-  print(paste('source data storage:', subdir.block))
+  print(paste('mapsheets data storage:', subdir.block))
   
   # create the source metadata list
   temp.src = list(web = NULL,
@@ -282,25 +282,31 @@ MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
                                tif=list(full=NULL, block=NULL)),
                   code = NULL)
   
-  # udpate these lists as needed
+  # update these lists as needed
   if(!is.null(cfg.in)) {
 
-    # modify entries of cfg.src
+    # create modified version of cfg.src...
     if(is.null(cfg.src)) {
       
-      cfg.src = temp.src
-    } 
-    temp.src = modifyList(temp.src, cfg.in$src, keep.null=TRUE) 
-    cfg.src = modifyList(temp.src, cfg.src, keep.null=TRUE) 
+      cfg.src = modifyList(temp.src, cfg.in$src, keep.null=TRUE)
+      
+    } else {
+      
+      cfg.src = modifyList(cfg.in$src, cfg.src, keep.null=FALSE) 
+      
+    }
     
-    # modify entries of cfg.out
+    # create modified version of cfg.out...
     if(is.null(cfg.out)) {
      
-      cfg.out = temp.out 
-    }
-    temp.out = modifyList(temp.out, cfg.in$out, keep.null=TRUE) 
-    cfg.out = modifyList(temp.out, cfg.out, keep.null=TRUE) 
+      cfg.out = modifyList(temp.out, cfg.in$out, keep.null=FALSE)
+      
+    } else {
 
+      cfg.out = modifyList(cfg.in$out, cfg.out, keep.null=TRUE) 
+      
+    }
+    
   } else {
     
     # nothing to modify, return defaults
@@ -355,6 +361,56 @@ MPB_crs = function()
 }
 
 #' Users who wish to use a different reference system may change these parameters before running the 'src_\*.R' scripts.
+#' 
+
+
+#' Most of the 'src_\*.R' scripts first create the raster layers for the full BC extent, before splitting them into smaller mapsheets.
+#' The following convenience function does the splitting, and returns a list of the filenames written
+# automated splitting of rasters into mapsheets
+MPB_split = function(cfg.in, snrc.sf) 
+{
+  # snrc.sf is the sf object containing the mapsheet polygons to loop over
+  # The function expects cfg.in$out$fname$tif$full to be a character vector of paths to 
+  # full-province raster layers. It loops over them, splitting each one (ie crop -> mask) 
+  # according the polygons in snrc.sf
+  
+  # (some code below hidden from markdown:)
+  # /*
+  
+  # get vector of NTS/SNRC names
+  snrc.names = snrc.sf$NTS_SNRC
+  
+  # define paths to output mapsheets
+  prefix.tif = setNames(file.path(cfg.in$out$dir.block, names(cfg.in$out$fname$tif$full)), names(cfg.in$out$fname$tif$full))
+  block.paths = lapply(prefix.tif, function(varpath) setNames(paste0(varpath, '_', snrc.names, '.tif'), snrc.names))
+  print(paste('writing to', cfg.in$out$dir.block, '...'))
+  
+  pb = txtProgressBar(min=1, max=length(snrc.names), style=3)
+  for(idx.varname in 1:length(block.paths))
+  {
+    # load the full BC raster
+    print(paste0('splitting ', cfg.in$out$fname$tif$full[idx.varname], ' into mapsheets...'))
+    temp.tif = raster::raster(cfg.in$out$fname$tif$full[idx.varname])
+    
+    #loop over NTS/SNRC mapsheets, cropping full BC rasters and saving to disk 
+    for(idx.snrc in 1:length(snrc.names))
+    {
+      setTxtProgressBar(pb, idx.snrc)
+      dest.file = block.paths[[idx.varname]][[idx.snrc]]
+      
+      # find bounding box for mapsheet, crop/mask raster and save 
+      block.sf = sf::st_geometry(snrc.sf[idx.snrc,])
+      block.bbox = raster::extent(sf::as_Spatial(block.sf))
+      cropped.temp.tif = raster::mask(raster::crop(temp.tif, block.bbox, snap='out'), sf::as_Spatial(block.sf))
+      raster::writeRaster(cropped.temp.tif, dest.file, overwrite=TRUE)
+    }
+  }
+  close(pb)
+  return(block.paths)
+  # */
+}
+
+#' This function could be easily modified to split over any other tiling of the BC extent.
 
 #+ include=FALSE
 # Convert to markdown by running the following line (uncommented)...
