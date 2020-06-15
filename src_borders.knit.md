@@ -31,11 +31,14 @@ cfg = MPB_metadata(collection)
 ```
 
 ```
-## [1] "borders subdirectory exists"
+## [1] "borders source subdirectory exists"
 ## [1] "source data storage: H:/git-MPB/rasterbc/data/borders/source"
-## [1] "borders subdirectory exists"
+## [1] "borders mapsheets subdirectory exists"
 ## [1] "mapsheets data storage: H:/git-MPB/rasterbc/data/borders/blocks"
 ```
+
+The metadata get filled in as we go. At the end of the script, we save this list to `data.dir` 
+
 
 ```r
 cfg.filename = file.path(data.dir, paste0(collection, '.rds'))
@@ -70,16 +73,11 @@ cfg.src = list(
                 NAME_ENG = 'NAME_ENG', 
                 NOM_FRA = 'NOM_FRA')
 )
+```
 
+```r
 # update the metadata list
 cfg = MPB_metadata(collection, cfg.in=cfg, cfg.src=cfg.src)
-```
-
-```
-## [1] "borders subdirectory exists"
-## [1] "source data storage: H:/git-MPB/rasterbc/data/borders/source"
-## [1] "borders subdirectory exists"
-## [1] "mapsheets data storage: H:/git-MPB/rasterbc/data/borders/blocks"
 ```
 
 From the provincial border polygon we will construct a binary raster indicating whether the grid cell lies 
@@ -132,6 +130,8 @@ if(!all(file.exists(cfg$src$fname)) | force.download)
 ##  "H:/git-MPB/rasterbc/data/borders/source/prov_territo.shp" "H:/git-MPB/rasterbc/data/borders/source/nts_snrc_250k.shp"
 ```
 
+Once the files are downloaded/extracted, the script will use the existing files instead of downloading them again (unless
+`force.download` is set to `TRUE`) 
 
 **processing**
 
@@ -142,31 +142,8 @@ First, prepare a mask for in-province pixels and save it to disk (20.2 MB):
 ```r
 # load the provincial boundaries polygons and NTS/SNRC blocks, reprojecting to crs(bc.mask.tif)
 prov.sf = sf::st_transform(sf::st_read(dsn=cfg$src$fname['prov']), MPB_crs()$epsg) 
-```
-
-```
-## Reading layer `prov_territo' from data source `H:\git-MPB\rasterbc\data\borders\source\prov_territo.shp' using driver `ESRI Shapefile'
-## Simple feature collection with 13 features and 6 fields
-## geometry type:  POLYGON
-## dimension:      XY
-## bbox:           xmin: -141.0028 ymin: 41.67656 xmax: -52.63802 ymax: 83.33621
-## geographic CRS: NAD83(CSRS98)
-```
-
-```r
 snrc.sf = sf::st_transform(sf::st_read(dsn=cfg$src$fname['snrc']), MPB_crs()$epsg)
-```
 
-```
-## Reading layer `nts_snrc_250k' from data source `H:\git-MPB\rasterbc\data\borders\source\nts_snrc_250k.shp' using driver `ESRI Shapefile'
-## Simple feature collection with 1243 features and 6 fields
-## geometry type:  POLYGON
-## dimension:      XY
-## bbox:           xmin: -142 ymin: 40 xmax: -48 ymax: 86
-## geographic CRS: NAD83(CSRS98)
-```
-
-```r
 # create a mask for in-province pixels (setting reference extent and resolution)
 ref.tif = raster::crop(MPB_crs()$tif, prov.sf[prov.sf$PROV_TERRI=='BC',1], snap='out')
 bc.sf = prov.sf[prov.sf$PROV_TERRI=='BC',1]
@@ -201,7 +178,7 @@ plot(st_geometry(snrc.sf)[bc.blocks.idx & !omit.blocks.idx], add=TRUE)
 plot(st_geometry(snrc.sf)[snrc.sf$NTS_SNRC %in% missing.blocks], add=TRUE, col='blue')
 ```
 
-![](src_borders_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](src_borders_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ```r
 incl.blocks.idx = bc.blocks.idx & !omit.blocks.idx | snrc.sf$NTS_SNRC %in% missing.blocks
@@ -227,7 +204,7 @@ prov.sf = sf::st_read(cfg$out$fname$shp['prov'])
 cfg$out$code = snrc.sf$NTS_SN
 ```
 
-Create `latitude`, `longitude` layers via `sp` package (slow step, taking around 5 minutes), then save to disk (622 MB)
+Create latitude, longitude layers via `sp` package (takes around 5 minutes), then save to disk (622 MB)
 
 
 ```r
@@ -258,5 +235,8 @@ cfg.blocks = MPB_split(cfg, snrc.sf)
 cfg = MPB_metadata(collection, cfg.in=cfg, cfg.out=list(fname=list(tif=list(block=cfg.blocks))))
 saveRDS(cfg, file=cfg.filename)
 ```
+
+Metadata (including file paths) can now be loaded from 'borders.rds' located in `data.dir` using `readRDS()`.
+
 
 

@@ -20,6 +20,8 @@ source(here('utility_functions.R'))
 # create the source data directory and metadata list
 collection = 'borders'
 cfg = MPB_metadata(collection)
+
+#' The metadata get filled in as we go. At the end of the script, we save this list to `data.dir` 
 cfg.filename = file.path(data.dir, paste0(collection, '.rds'))
 
 #'
@@ -50,6 +52,7 @@ cfg.src = list(
                 NOM_FRA = 'NOM_FRA')
 )
 
+#+ results='hide'
 # update the metadata list
 cfg = MPB_metadata(collection, cfg.in=cfg, cfg.src=cfg.src)
 
@@ -91,12 +94,16 @@ if(!all(file.exists(cfg$src$fname)) | force.download)
   print(cfg$src$fname)
 }
 
+#' Once the files are downloaded/extracted, the script will use the existing files instead of downloading them again (unless
+#' `force.download` is set to `TRUE`) 
+
 #'
 #' **processing**
 #' 
 #' 
 
 #' First, prepare a mask for in-province pixels and save it to disk (20.2 MB):
+#+ results='hide'
 
 # load the provincial boundaries polygons and NTS/SNRC blocks, reprojecting to crs(bc.mask.tif)
 prov.sf = sf::st_transform(sf::st_read(dsn=cfg$src$fname['prov']), MPB_crs()$epsg) 
@@ -142,7 +149,7 @@ snrc.sf = sf::st_read(cfg$out$fname$shp['snrc'])
 prov.sf = sf::st_read(cfg$out$fname$shp['prov'])
 cfg$out$code = snrc.sf$NTS_SN
 
-#' Create `latitude`, `longitude` layers via `sp` package (slow step, taking around 5 minutes), then save to disk (622 MB)
+#' Create latitude, longitude layers via `sp` package (takes around 5 minutes), then save to disk (622 MB)
 #+ eval=FALSE
 # load the in-province mask (raster), convert to points dataframe 
 bc.mask.tif = raster::raster(cfg$out$fname$tif$full['prov'])
@@ -168,6 +175,8 @@ cfg.blocks = MPB_split(cfg, snrc.sf)
 # update metadata list `cfg` and save it to `data.dir`.
 cfg = MPB_metadata(collection, cfg.in=cfg, cfg.out=list(fname=list(tif=list(block=cfg.blocks))))
 saveRDS(cfg, file=cfg.filename)
+
+#' Metadata (including file paths) can now be loaded from 'borders.rds' located in `data.dir` using `readRDS()`.
 
 #+ include=FALSE
 # Convert to markdown by running the following line (uncommented)...

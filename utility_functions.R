@@ -249,11 +249,11 @@ MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
   if(!dir.exists(subdir.src))
   {
     dir.create(subdir.src, recursive=TRUE)
-    print(paste(collection, 'subdirectory created'))
+    print(paste(collection, 'source subdirectory created'))
     
   } else {
   
-    print(paste(collection, 'subdirectory exists'))
+    print(paste(collection, 'source subdirectory exists'))
   }
   print(paste('source data storage:', subdir.src))
   
@@ -262,11 +262,11 @@ MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
   if(!dir.exists(subdir.block))
   {
     dir.create(subdir.block, recursive=TRUE)
-    print(paste(collection, 'subdirectory created'))
+    print(paste(collection, 'mapsheets subdirectory created'))
     
   } else {
     
-    print(paste(collection, 'subdirectory exists'))
+    print(paste(collection, 'mapsheets subdirectory exists'))
   }
   print(paste('mapsheets data storage:', subdir.block))
   
