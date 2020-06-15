@@ -20,4 +20,14 @@ is shared by both the
 package and the
 (<a href="http://hectaresBC.org" target="_blank">hectaresBC</a>) website,
 so users can combine data from all three sources without fooling around with projection and alignment. 
+
+As much as possible, I have tried to use the (more modern) `sf` package in lieu of the (more widely used) `sp` package. Both are great, but
+`sf` seems more future-proof, and more efficiently coded for a lot of this GIS work. Regrettably, I wound up with a mixture of function calls 
+to both packages, in part because some important features are still unavailable in `sf`, and also because some of the data collections are in
+"legacy" file formats more easily dealt with by `sp`. Note that GDAL (and its dependents `rgdal`, `sp`, `sf`) are in the middle of a 
+<a href="https://www.r-spatial.org/r/2020/03/17/wkt.html" target="_blank">PROJ6/GDAL3 transition</a>,
+so quite often you will see a warning when opening a source file containing older PROJ representations of the coordinate reference 
+system. More on this 
+<a href="http://rgdal.r-forge.r-project.org/articles/PROJ6_GDAL3.html" target="_blank">here</a>,
+
  
