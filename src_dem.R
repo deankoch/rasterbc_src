@@ -139,7 +139,7 @@ gdalUtils::gdalwarp(srcfile=temp.tif,
                     overwrite=TRUE, 
                     verbose=TRUE)
 
-#' Note that with large data files, these (external) GDAL calls are much faster than using package `raster`.
+#' With large data files, these (external) GDAL calls are much faster than using package `raster`.
 #' Here (and anywhere else a warp is done) I use bilinear interpolation to assign values to grid-points. Note that, 
 #' wherever possible, it is best to avoid warping (a kind of raster-to-raster reprojection), because it is a lossy 
 #' operation, introducing a new source of error. 
