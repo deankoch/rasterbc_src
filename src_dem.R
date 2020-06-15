@@ -1,15 +1,19 @@
 #' ---
-#' title: "src_borders.R"
+#' title: "src_dem.R"
 #' author: "Dean Koch"
-#' date: "June 10, 2020"
+#' date: "June 15, 2020"
 #' output: github_document
 #' ---
 #' 
 #' 
-#' This is the initial setup script for reproducing the rasterbc dataset. 
-#' It downloads some shapefiles to define boundaries, and sets up configuration details for GIS processing.
+#' Digital Elevation Map (DEM) and derived products, slope and aspect. Runtime around 5-10 minutes 
 #' 
 
+#' After running 'src_borders.R' we now have a set of polygons ('snrc_std.shp', loaded as `snrc.sf`, below)
+#' with which to split the data into blocks (*ie* mapsheets). The path of this shapefile is stored in the `cfg.borders` 
+#' metadata list, which can be loaded from the file 'borders.rds' located in the `data.dir` directory.
+#' 
+#+ results='hide'
 # download again to rewrite existing files? 
 force.download = FALSE
 
@@ -17,76 +21,81 @@ force.download = FALSE
 library(here)
 source(here('utility_functions.R'))
 
-# create the source data directory and metadata list
-collection = 'borders'
-cfg = MPB_metadata(collection)
+# load the borders info and shapefiles for mapsheets
+cfg.borders = readRDS(here('data', 'borders.rds'))
+snrc.sf = sf::st_read(cfg.borders$out$fname$shp['snrc'])
+snrc.codes = cfg.borders$out$code
 
-#' The metadata get filled in as we go. At the end of the script, we save this list to `data.dir` 
+#' As with the 'borders' collection, we will fill in the metadata as we go, and save a copy to disk at the end 
+# create the source data directory, metadata list and its path on disk
+collection = 'dem'
+cfg = MPB_metadata(collection)
 cfg.filename = file.path(data.dir, paste0(collection, '.rds'))
+
+
 
 #'
 #' **source information**
 #' 
-#' These data are from the National Topographic System (NTS) of Canada 
-#' (<a href="https://www.nrcan.gc.ca/maps-tools-publications/maps/topographic-maps/10995" target="_blank">Natural Resources Canada</a>).
+#' We access an archived (2017) copy of Natural Resources Canada's (NRCan) Canadian Digital Elevation Map (CDEM; see the PDF overview
+#' <a href="http://ftp.geogratis.gc.ca/pub/nrcan_rncan/elevation/cdem_mnec/doc/CDEM_en.pdf" target="_blank">here</a>, 
+#' and more detailed documentation 
+#' <a href="http://ftp.geogratis.gc.ca/pub/nrcan_rncan/elevation/cdem_mnec/doc/CDEM_product_specs.pdf" target="_blank">here</a>).
 #' The web url below points to an
-#' <a href="http://ftp.geogratis.gc.ca/pub/nrcan_rncan/vector/index/" target="_blank">ftp directory</a>
-#' containing a zip archive with shapefiles for provincial borders, and for a tiling of BC's geographical area into 
-#' smaller blocks (or *mapsheets*, indexed by a 
-#' <a href="https://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/maps/9765" target="_blank">number-letter code</a>).
+#' <a href="http://ftp.geogratis.gc.ca/pub/nrcan_rncan/elevation/cdem_mnec/" target="_blank">ftp directory</a>
+#' containing the (zipped) DEM rasters at various resolutions. 
+#' 
 #' The <a href="https://open.canada.ca/en/open-government-licence-canada" target="_blank">Open Government Licence - Canada</a> applies.
+#' 
+#' The 3 (arc)second resolution in the archive is sufficient for our purposes, but users may wish to look at the higher (1 and 2 sec) 
+#' resolution datasets available from the newer
+#' <a href="https://open.canada.ca/data/en/dataset/957782bf-847c-4644-a757-e383c0057995" target="_blank">High Resolution</a> DEM. 
+#' A useful directory of Canadian DEM products can be found
+#' <a href="https://www.nrcan.gc.ca/science-and-data/science-and-research/earth-sciences/geography/topographic-information/download-directory-documentation/17215" target="_blank">here</a>. 
 
 # define the source metadata
 cfg.src = list(
   
   # url to download from
-  web = 'http://ftp.geogratis.gc.ca/pub/nrcan_rncan/vector/index/nts_snrc.zip',
+  web = 'http://ftp.geogratis.gc.ca/pub/nrcan_rncan/elevation/cdem_mnec/archive/cdem_3sec.zip',
   
-  # filename strings of the shapefiles for BC provincial border and SNRC mapsheets 
-  fname.prefix = c(prov = 'prov_territo', 
-                   snrc = 'nts_snrc_250k'),
-  
-  # feature names to save
-  feat.name = c(NTS_SNRC = 'NTS_SNRC',
-                NAME_ENG = 'NAME_ENG', 
-                NOM_FRA = 'NOM_FRA')
+  # files in the zip
+  fname = c(tif = 'cdem_3sec.tif')
 )
 
 #+ results='hide'
 # update the metadata list
 cfg = MPB_metadata(collection, cfg.in=cfg, cfg.src=cfg.src)
 
-#' From the provincial border polygon we will construct a binary raster indicating whether the grid cell lies 
-#' in BC (`prov`); In addition we store the latitude and longitude for each cell (`latitude`, `longitude`) 
-#' in separate layers. Copies of the reprojected provincial border and mapsheet polygons will be saved as shapefile.
-#' 
+#' After warping the elevation layer to the reference coordinate system, we will compute the derived quantities `slope` and `aspect`. 
+#' We set up these output filenames before proceeding  
 
-# set up the source and output filenames
-varnames = setNames(nm=c(names(cfg$src$fname.prefix), lat='latitude', long='longitude'))
-cfg$src$fname = setNames(paste0(file.path(cfg$src$dir, cfg$src$fname.prefix), '.shp'), varnames[c('prov', 'snrc')])
-cfg$out$fname$shp = setNames(paste0(file.path(data.dir, cfg$out$name, varnames[c('prov', 'snrc')]), '_std.shp'), varnames[c('prov', 'snrc')])
-prefix.tif = setNames(file.path(data.dir, cfg$out$name, varnames[!(varnames %in% 'snrc')]), varnames[!(varnames %in% 'snrc')])
-cfg$out$fname$tif$full = setNames(paste0(prefix.tif, '.tif'), varnames[!(varnames %in% 'snrc')])
+# set up the source and full-extent output filenames
+varnames = setNames(nm=c(dem='dem', slope='slope', aspect='aspect'))
+cfg$src$fname = c(dem=file.path(cfg$src$dir, cfg$src$fname))
+cfg$out$fname$tif$full = setNames(file.path(data.dir, cfg$out$name, paste0(varnames, '_std.tif')), varnames)
 
-#' `prefix.tif` gives the first part of the filenames that will later be assigned to each of the mapsheets, along with a suffix
-#' of the form '_\<SNRC-code\>.tif'. First we need to download and open the SNRC shapefile to find out which mapsheet codes are relevant.
-#'
+
 #' **downloads**
 #' 
-#' This is a relatively small zip archive (12.2 MB, or 55.1 MB uncompressed)
+#' This is a large zip archive containing a *very large* geotiff file (2.5 GB, or **21 GB uncompressed**).
+#' 
+#' Once the file is downloaded/extracted, the script will use the existing file instead of downloading it again (unless
+#' `force.download` is set to `TRUE`) 
 
+#+ echo=FALSE
 # check if we need to download it again:
 if(!all(file.exists(cfg$src$fname)) | force.download)
 {
   #+ eval=FALSE
-  # download the zip to temporary file (12.2 MB), extract to disk
-  borders.tmp = tempfile('borders_temp', cfg$src$dir, '.zip')
-  download.file(url=cfg$src$web, destfile=borders.tmp, mode='wb')
-  borders.paths = unzip(borders.tmp, exdir=cfg$src$dir)
-  unlink(borders.tmp)
+  # download the zip to temporary file (2.5 GB), extract to disk
+  dem.tmp = tempfile('dem_temp', cfg$src$dir, '.zip')
+  download.file(url=cfg$src$web, destfile=dem.tmp, mode='wb')
+  dem.paths = unzip(dem.tmp, exdir=cfg$src$dir)
+  unlink(dem.tmp)
   
-  #' verify that the two source files listed in `cfg$src$fname` are among the extracted files
-  all(cfg$src$fname %in% borders.paths)
+  #' verify that the source file listed in `cfg$src$fname` is among the extracted files
+  all(cfg$src$fname %in% dem.paths)
   
 } else {
  
@@ -94,92 +103,94 @@ if(!all(file.exists(cfg$src$fname)) | force.download)
   print(cfg$src$fname)
 }
 
-#' Once the files are downloaded/extracted, the script will use the existing files instead of downloading them again (unless
-#' `force.download` is set to `TRUE`) 
-
 #'
 #' **processing**
 #' 
 #' 
 
-#' First, prepare a mask for in-province pixels and save it to disk (20.2 MB):
 #+ results='hide'
+# reload the bc borders shapefile and mask
+prov.sf = sf::st_read(cfg.borders$out$fname$shp['prov'])
+bc.mask.tif = raster::raster(cfg.borders$out$fname$tif$full['prov'])
 
-# load the provincial boundaries polygons and NTS/SNRC blocks, reprojecting to crs(bc.mask.tif)
-prov.sf = sf::st_transform(sf::st_read(dsn=cfg$src$fname['prov']), MPB_crs()$epsg) 
-snrc.sf = sf::st_transform(sf::st_read(dsn=cfg$src$fname['snrc']), MPB_crs()$epsg)
-
-# create a mask for in-province pixels (setting reference extent and resolution)
-ref.tif = raster::crop(MPB_crs()$tif, prov.sf[prov.sf$PROV_TERRI=='BC',1], snap='out')
-bc.sf = prov.sf[prov.sf$PROV_TERRI=='BC',1]
+#' First, crop the elevation layer and write the full extent to disk in a temporary file (1.7 GB):
+#+ eval=FALSE
+# load the gigantic source raster, note GDAL warning about the outdated PROJ string
+temp.tif = paste0(tempfile(), '.tif')
+dem.tif = raster::raster(cfg$src$fname['dem'])
 
 #+ eval=FALSE
-# replace character column with numeric, rasterize, and write
-bc.sf$PROV_TERRI = 0
-bc.mask.tif = fasterize::fasterize(sf=bc.sf, raster=ref.tif, field='PROV_TERRI', fun='any')
-raster::writeRaster(bc.mask.tif, cfg$out$fname$tif$full['prov'], overwrite=TRUE)
+# crop to BC using a fast GDAL translate operation via tempfile
+dem.bbox = st_bbox(sf::st_transform(prov.sf, raster::crs(dem.tif)))
+gdalUtils::gdal_translate(src_dataset=cfg$src$fname['dem'], 
+                          dst_dataset=temp.tif, 
+                          projwin=dem.bbox[c('xmin', 'ymax', 'xmax', 'ymin')])
 
-#' Next, build a list of NTS/SNRC codes that overlap with BC landmass
-
-# find which SNRC codes intersect with BC, Yukon, Northwest Territories
-bc.blocks.idx = sf::st_intersects(sf::st_geometry(prov.sf[prov.sf$PROV_TERRI=='BC',1]), sf::st_geometry(snrc.sf), sparse=FALSE)
-yt.blocks.idx = sf::st_intersects(sf::st_geometry(prov.sf[prov.sf$PROV_TERRI=='YT',1]), sf::st_geometry(snrc.sf), sparse=FALSE)
-nt.blocks.idx = sf::st_intersects(sf::st_geometry(prov.sf[prov.sf$PROV_TERRI=='NT',1]), sf::st_geometry(snrc.sf), sparse=FALSE)
-omit.blocks.idx = yt.blocks.idx | nt.blocks.idx | is.na(snrc.sf$NAME_ENG)
-
-#' There seem to be some overlap/imprecision issues with the provincial border polygons: some of the coastal mapsheets
-#' (see below, in blue) are missing from this intersection (in yellow). I add them back manually...
-missing.blocks = c('102O', '103O', '114O', '104C', '114I', '114P', '114O')
-plot(st_geometry(bc.sf), col='yellow')
-plot(st_geometry(snrc.sf)[bc.blocks.idx & !omit.blocks.idx], add=TRUE)
-plot(st_geometry(snrc.sf)[snrc.sf$NTS_SNRC %in% missing.blocks], add=TRUE, col='blue')
-incl.blocks.idx = bc.blocks.idx & !omit.blocks.idx | snrc.sf$NTS_SNRC %in% missing.blocks
-incl.features.idx = which(names(snrc.sf) %in% cfg$src$feat.name)
-
-#' ... and save reprojected/simplified version of the source shapefile data (1.1 MB).
+#' Next, warp the DEM using fast GDAL warp call, save to disk (859 MB), delete tempfile
 #+ eval=FALSE
-sf::st_write(snrc.sf[incl.blocks.idx, incl.features.idx], cfg$out$fname$shp['snrc'], append=FALSE)
-sf::st_write(bc.sf, cfg$out$fname$shp['prov'], append=FALSE)
+# reload DEM raster with smaller cropped version, then warp
+dem.tif = raster::raster(temp.tif)
+gdalUtils::gdalwarp(srcfile=temp.tif, 
+                    dstfile=cfg$out$fname$tif$full['dem'], 
+                    s_srs=raster::crs(dem.tif), 
+                    t_srs=raster::crs(bc.mask.tif), 
+                    tr=raster::res(bc.mask.tif), 
+                    r='bilinear', te=raster::bbox(bc.mask.tif), 
+                    overwrite=TRUE, 
+                    verbose=TRUE)
 
-#' Now reload these files to overwrite the (larger) source shapefiles in memory: 
-#' The NTS/SNRC codes in `cfg$out$code` should match those in the NTS mapsheet collection for BC
-#' (<a href="https://ftp.maps.canada.ca/pub/nrcan_rncan/vector/index/index_pdf/NTS-SNRC_Index%205_British_Columbia_300dpi.pdf" target="_blank">PDF link</a>).
-#+ results='hide'
-snrc.sf = sf::st_read(cfg$out$fname$shp['snrc'])
-prov.sf = sf::st_read(cfg$out$fname$shp['prov'])
-cfg$out$code = snrc.sf$NTS_SN
+#' Note that with large data files, these (external) GDAL calls are much faster than using package `raster`.
+#' Here (and anywhere else a warp is done) I use bilinear interpolation to assign values to grid-points. Note that, 
+#' wherever possible, it is best to avoid warping (a kind of raster-to-raster reprojection), because it is a lossy 
+#' operation, introducing a new source of error. 
 
-#' Create latitude, longitude layers via `sp` package (takes around 5 minutes), then save to disk (622 MB)
+# reload dem, compute min/max stats, clip to mask, rewrite to disk (415 MB)
 #+ eval=FALSE
-# load the in-province mask (raster), convert to points dataframe 
-bc.mask.tif = raster::raster(cfg$out$fname$tif$full['prov'])
-bc.coords.df = data.frame(raster::coordinates(bc.mask.tif))
-sp::coordinates(bc.coords.df) = c('x', 'y')
-sp::proj4string(bc.coords.df) = raster::crs(bc.mask.tif)
+bc.dem.tif = raster::mask(raster::setMinMax(raster::raster(cfg$out$fname$tif$full['dem'])), bc.mask.tif)
+raster::writeRaster(bc.dem.tif, cfg$out$fname$tif$full['dem'], overwrite=TRUE)
+unlink(temp.tif)
 
-# reproject to lat/long, apply mask, and write
-bc.coords.df = sp::spTransform(bc.coords.df, CRS=sp::CRS('+proj=longlat +ellps=GRS80'))
-raster::writeRaster(raster::mask(raster::setValues(bc.mask.tif, bc.coords.df$y), bc.mask.tif), cfg$out$fname$tif$full['latitude'], overwrite=TRUE)
-raster::writeRaster(raster::mask(raster::setValues(bc.mask.tif, bc.coords.df$x), bc.mask.tif), cfg$out$fname$tif$full['longitude'], overwrite=TRUE)
 
-#' Finally, split these layers up into mapsheets corresponding to the NTS/SNRC codes (638 MB)
-#' 
+#' Next we compute the slope and aspect layers, and write full-extent rasters to disk (875 MB total)
 #+ eval=FALSE
 
-# reload the mapsheet polygons 
-snrc.sf = sf::st_read(cfg$out$fname$shp['snrc'])
+# compute slope
+gdalUtils::gdaldem(mode='slope', 
+                   input_dem=cfg$out$fname$tif$full['dem'], 
+                   output=cfg$out$fname$tif$full['slope'], 
+                   compute_edges=TRUE)
 
-# function call to crop and save blocks (writes )
+# reload, compute min/max stats, clip to mask, rewrite to disk (441 MB)
+bc.slope.tif = raster::mask(raster::setMinMax(raster::raster(cfg$out$fname$tif$full['slope'])), bc.mask.tif)
+raster::writeRaster(bc.slope.tif, cfg$out$fname$tif$full['slope'], overwrite=TRUE)
+
+# compute aspect
+gdalUtils::gdaldem(mode='aspect', 
+                   input_dem=cfg$out$fname$tif$full['dem'], 
+                   output=cfg$out$fname$tif$full['aspect'], 
+                   compute_edges=TRUE)
+
+# reload, compute min/max stats, clip to mask, rewrite to disk (434 MB)
+bc.aspect.tif = raster::mask(raster::setMinMax(raster::raster(cfg$out$fname$tif$full['aspect'])), bc.mask.tif)
+raster::writeRaster(bc.aspect.tif, cfg$out$fname$tif$full['aspect'], overwrite=TRUE)
+
+# garbage collection
+rm(list=c('dem.tif', 'bc.slope.tif', 'bc.aspect.tif'))
+
+#' Finally, split these layers up into mapsheets corresponding to the NTS/SNRC codes (1.2 GB)
+#+ eval=FALSE
+
+# function call to crop and save blocks
 cfg.blocks = MPB_split(cfg, snrc.sf)
 
 # update metadata list `cfg` and save it to `data.dir`.
 cfg = MPB_metadata(collection, cfg.in=cfg, cfg.out=list(fname=list(tif=list(block=cfg.blocks))))
 saveRDS(cfg, file=cfg.filename)
 
-#' Metadata (including file paths) can now be loaded from 'borders.rds' located in `data.dir` using `readRDS()`.
+#' Metadata (including file paths) can now be loaded from 'dem.rds' located in `data.dir` using `readRDS()`.
 
 #+ include=FALSE
 # Convert to markdown by running the following line (uncommented)...
-# rmarkdown::render(here('src_borders.R'), run_pandoc=FALSE, clean=TRUE)
+# rmarkdown::render(here('src_dem.R'), run_pandoc=FALSE, clean=TRUE)
 # ... or to html ...
-# rmarkdown::render(here('src_borders.R'))
+# rmarkdown::render(here('src_dem.R'))
