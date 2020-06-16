@@ -67,7 +67,7 @@ n.cores = 3
 
 #' **Convenience functions**
 
-# blockwise/parallel rasterization of large shapefiles
+# blockwise/parallel rasterization (presence/absence -> numeric) 
 MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf=NULL, n.cores=1) 
 {
   # rasterizes the input shapefile poly.sf (a POLYGON or MULTIPOLYGON) as GeoTiff written to 

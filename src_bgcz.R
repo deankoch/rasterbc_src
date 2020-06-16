@@ -6,7 +6,7 @@
 #' ---
 #' 
 #' 
-#' Biogeoclimatic Zone (BGCZ) classification map from BC's Ministry of Forests. Runtime around ?? minutes 
+#' Biogeoclimatic Zone (BGCZ) classification (version 11, August 10th, 2018) from the BC Ministry of Forests. Runtime around 10 minutes 
 #' 
 
 #' This script follows the same template as 'src_dem.R'. For more detail, see comments in 'src_dem.knit.md'
@@ -32,22 +32,28 @@ cfg.filename = file.path(data.dir, paste0(collection, '.rds'))
 #'
 #' **source information**
 #' 
-#' We access an archived (2017) copy of Natural Resources Canada's (NRCan) Canadian Digital Elevation Map (Cbgcz; see the PDF overview
-#' <a href="http://ftp.geogratis.gc.ca/pub/nrcan_rncan/elevation/cbgcz_mnec/doc/Cbgcz_en.pdf" target="_blank">here</a>, 
-#' and more detailed documentation 
-#' <a href="http://ftp.geogratis.gc.ca/pub/nrcan_rncan/elevation/cbgcz_mnec/doc/Cbgcz_product_specs.pdf" target="_blank">here</a>).
-#' The web url below points to an
-#' <a href="http://ftp.geogratis.gc.ca/pub/nrcan_rncan/elevation/cdem_mnec/" target="_blank">ftp directory</a>
-#' containing the (zipped) DEM rasters at various resolutions. 
+#' The BC Ministry of Forest's
+#' <a href="https://www.for.gov.bc.ca/hre/becweb/" target="_blank">Biogeoclimatic Ecosystem Classification (BEC)</a> 
+#' system categorizes BC forestland based on a number of criteria. This script collects the climatic (zonal) classification,
+#' which identifies areas of (relatively) uniform climate as polygons, based on vegetation, soils, and topography. The
+#' database is updated periodically; This version (v11) is current as of June, 2020.  
 #' 
-#' The <a href="https://open.canada.ca/en/open-government-licence-canada" target="_blank">Open Government Licence - Canada</a> applies.
+#' There are  16 zones, each one named after its geographical/climatic characteristics and/or climax species (see
+#' <a href="https://www.for.gov.bc.ca/hfd/library/documents/treebook/biogeo/biogeo.htm" target="_blank">here</a>
+#' for brochures on 14 of them). Zones are divided into subzones based on precipitation and temperature or continentality 
+#' (see <a href="https://www.for.gov.bc.ca/hre/becweb/system/how/index.html#naming_bec_units" target="_blank">here</a>
+#' for an overview of subzone codes); and these are further subdivided into five possible variants based on specifics of
+#' soil and vegetation. In addition, we have simpler feature sets indicating the landcover type (water, ice, land), region (general
+#' place name) and organizational region (a more specific place name).
 #' 
-#' The 3 (arc)second resolution in the archive is sufficient for our purposes, but users may wish to look at the higher (1 and 2 sec) 
-#' resolution datasets available from the newer
-#' <a href="https://open.canada.ca/data/en/dataset/957782bf-847c-4644-a757-e383c0057995" target="_blank">High Resolution</a> DEM. 
-#' A useful directory of Canadian DEM products can be found
-#' <a href="https://www.nrcan.gc.ca/science-and-data/science-and-research/earth-sciences/geography/topographic-information/download-directory-documentation/17215" target="_blank">here</a>. 
-
+#' A more detailed description of these labels can be found on the 
+#' <a href="https://catalogue.data.gov.bc.ca/dataset/f358a53b-ffde-4830-a325-a5a03ff672c3" target="_blank">BC Data Catalogue Metadata page</a>,
+#' and a table of full text descriptions for each subzone and variant can be found in the (xlsx) spreadsheet
+#' <a href="https://www.for.gov.bc.ca/ftp/HRE/external/!publish/becmaps/GISdata/BGC_BC_v11_HectareSummary.xlsx" target="_blank">linked here</a>.
+#' 
+#' The <a href="https://www2.gov.bc.ca/gov/content/data/open-data/open-government-licence-bc" target="_blank">Open Government Licence - British Columbia</a> applies.
+#' 
+#' 
 # define the source metadata
 cfg.src = list(
   
@@ -59,7 +65,7 @@ cfg.src = list(
   
   # feature names to save (note ESRI driver used by GDAL has weird abbreviation behaviour)
   feat.name = c(region = 'REG_NAME',
-                source = 'ORG_NAME', 
+                org = 'ORG_NAME', 
                 cover = 'LAND_COVER_CLASS',
                 zone = 'ZONE', 
                 subzone = 'SUBZONE', 
@@ -70,8 +76,7 @@ cfg.src = list(
 # update the metadata list
 cfg = MPB_metadata(collection, cfg.in=cfg, cfg.src=cfg.src)
 
-#' After warping the elevation layer to the reference coordinate system, we will compute the derived quantities `slope` and `aspect`. 
-#' We set up these output filenames before proceeding  
+#' We set up the full-extent output filenames before proceeding  
 
 # set up the source and full-extent output filenames
 varnames = setNames(nm=names(cfg$src$feat.name))
@@ -135,51 +140,58 @@ sf::st_geometry(bgcz.reproj.sf) = 'geometry'
 sf::st_write(bgcz.reproj.sf, cfg$out$fname$shp, append=FALSE)
 
 #' Notice the feature columns are renamed to match `names(cfg.src$feat.name)`. **These names should be no longer than 10 characters**,
-#' due to a limitation in the ESRI shapefile format. Confusingly, if *any* of the names exceed 10 characters,  GDAL abbreviates
-#' *all* of them to 7 characters, which easily leads to bugs and errors (if these abbreviations are not unique). 
+#' due to a limitation in the ESRI shapefile format. It seems that if *any* of the names exceed 10 characters,  GDAL abbreviates
+#' *all* of them to 7 characters, which easily leads to bugs (especially if the abbreviations are not unique). 
 #' 
 
-#' Next we rasterize each of the features listed in `cfg.src$feat.name`. The categorical (named) classifications are converted to
+
+
+#' Next we rasterize each of the features listed in `cfg.src$feat.name`. The categorical data are converted to
 #' integer (to be compatible with the geotiff format), and we save the conversion table as a list in `cfg$out$code`
+#' (*eg.* the `n`th entry of `cfg$out$code$varname` is coded as `n` in the corresponding raster) 
 #+ eval=FALSE
+
 # reload the shapefile to overwrite the large source database in memory
 bgcz.sf = sf::st_read(cfg$out$fname$shp)
 
 # save factor level codes with a sensible ordering
-cfg$out$code = lapply(varnames, function(feat) sort(unique(unlist(sf::st_drop_geometry(bgcz.sf[, feat]))), na.last=FALSE))
+cfg$out$code = lapply(varnames, function(feat) sort(unique(unlist(sf::st_drop_geometry(bgcz.sf[, feat]))), na.last=TRUE))
 
 # convert character columns to integer
-# feature = 'region'
-# x = unlist(st_drop_geometry(bgcz.sf[,feature]))
-# match(x, cfg$out$code[[feature]])
-# 
-# x %in% cfg$out$code[[feature]]
+bgcz.sf[,1:length(varnames)] = sapply(varnames, function(feature) match(unlist(st_drop_geometry(bgcz.sf[,feature])), cfg$out$code[[feature]]))
 
-#' There is probably a more direct way of doing this using a `factor` representation. Note that a recent upgrade to R (v4) now has different 
-#' default behaviour for loading columns of categorical data (*eg.* previous versions of R would load columns of `bgcz.sf` as factors, not strings). 
+#' There is probably a more direct way of doing this using a `factor` representation. Note that 
+#' <a href="https://cran.r-project.org/doc/manuals/r-release/NEWS.html" target="_blank">a recent upgrade</a> 
+#' to R (v4.0.1) now has different 
+#' default behaviour for loading columns of categorical data (*eg.* previous versions of R would load columns 
+#' of `bgcz.sf` as factors, not strings). 
+#' 
 
-# rasterize each feature layer and write to disk
-# bgcz.tif = lapply(names(cfg.src$bgcz$feat.names), function(feat) raster::mask(fasterize::fasterize(bgcz.lcc.sf, bc.mask.tif, feat, 'last'), bc.mask.tif))
-# for(idx in 1:length(cfg.src$bgcz$feat.names))
-# {
-#   # copy feature names to layer names
-#   names(bgcz.tif[[idx]]) = names(cfg.src$bgcz$feat.names)[idx]
-#   raster::writeRaster(bgcz.tif[[idx]], cfg.data$bgcz$path.out$tif[idx], overwrite=TRUE)
-# }
+#' Now we can rasterize and write to disk (185 MB total)
+#+ eval=FALSE
+# loop over variable names to rasterize
+pb = txtProgressBar(min=1, max=length(varnames), style=3)
+for(idx.feature in 1:length(varnames))
+{
+  # rasterize, apply provincial borders mask, then write to disk
+  setTxtProgressBar(pb, idx.feature)
+  temp.tif = raster::mask(fasterize::fasterize(bgcz.sf, bc.mask.tif, field=varnames[idx.feature], fun='last'), bc.mask.tif)
+  raster::writeRaster(temp.tif, cfg$out$fname$tif$full[idx.feature], overwrite=TRUE)
+}
+close(pb)
 
-# clean up
-#rm(list=c('bgcz.sf', 'bgcz.reproj.sf', 'bgcz.tif'))
-
+# garbage collection
+rm(list=c('bgcz.sf', 'temp.tif'))
 
 #' Finally, split these layers up into mapsheets corresponding to the NTS/SNRC codes (1.2 GB)
 #+ eval=FALSE
 
 # function call to crop and save blocks
-#cfg.blocks = MPB_split(cfg, snrc.sf)
+cfg.blocks = MPB_split(cfg, snrc.sf)
 
 # update metadata list `cfg` and save it to `data.dir`.
-#cfg = MPB_metadata(collection, cfg.in=cfg, cfg.out=list(fname=list(tif=list(block=cfg.blocks))))
-#saveRDS(cfg, file=cfg.filename)
+cfg = MPB_metadata(collection, cfg.in=cfg, cfg.out=list(fname=list(tif=list(block=cfg.blocks))))
+saveRDS(cfg, file=cfg.filename)
 
 #' Metadata (including file paths) can now be loaded from 'bgcz.rds' located in `data.dir` using `readRDS()`.
 
