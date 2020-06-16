@@ -99,7 +99,7 @@ cfg$out$fname$tif$full = setNames(file.path(data.dir, cfg$out$name, paste0(varna
 The zip archive contains a geodatabase, which is represented on disk as a folder containing lots of 
 crazy-looking user-unfriendly filenames (386.7 MB, or 567 MB uncompressed).
 
-Once these files is downloaded/extracted, the script will use the existing ones instead of downloading it all again (unless
+Once these files are downloaded/extracted, the script will use the existing ones instead of downloading it all again (unless
 `force.download` is set to `TRUE`) 
 
 
@@ -185,7 +185,7 @@ close(pb)
 rm(list=c('bgcz.sf', 'temp.tif'))
 ```
 
-Finally, split these layers up into mapsheets corresponding to the NTS/SNRC codes (1.2 GB)
+Finally, split these layers up into mapsheets corresponding to the NTS/SNRC codes (228 MB)
 
 
 ```r

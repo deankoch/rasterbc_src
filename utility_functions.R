@@ -313,6 +313,38 @@ MPB_metadata = function(collection, cfg.in=NULL, cfg.src=NULL, cfg.out=NULL)
     cfg.src = temp.src
     cfg.out = temp.out
   }
+  
+  # create subfolders for organizing output by year (if applicable)
+  if(!is.null(cfg.src$years))
+  {
+    # define storage directories for full-extent yearly data (creating them if necessary)
+    subdir.year = file.path(data.dir, collection, cfg.src$years)
+    if(!all(dir.exists(subdir.year)))
+    {
+      sapply(subdir.year, function(year) dir.create(year, recursive=TRUE))
+      print(paste(collection, 'yearly subdirectories created'))
+      
+    } else {
+      
+      print(paste(collection, 'yearly subdirectories exist'))
+    }
+    print('yearly data storage:')
+    print(subdir.year)
+    
+    # define storage directories for full-extent yearly data (creating them if necessary)
+    subdir.block.year = file.path(data.dir, collection, 'blocks', cfg.src$years)
+    if(!all(dir.exists(subdir.block.year)))
+    {
+      sapply(subdir.block.year, function(year) dir.create(year, recursive=TRUE))
+      print(paste(collection, 'yearly (blockwise) subdirectories created'))
+      
+    } else {
+      
+      print(paste(collection, 'yearly (blockwise) subdirectories exist'))
+    }
+    print('yearly (blockwise) data storage:')
+    print(subdir.block.year)
+  }
 
   # assemble and return the list
   return(list(src=cfg.src, out=cfg.out))

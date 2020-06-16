@@ -19,93 +19,21 @@ library(here)
 
 # scrape URLS
 library(rvest)
-```
-
-```
-## Loading required package: xml2
-```
-
-```r
 library(RCurl)
 
 # handle tifs, shapefiles
 library(raster)
 library(rgdal)
-```
-
-```
-## rgdal: version: 1.5-8, (SVN revision 990)
-## Geospatial Data Abstraction Library extensions to R successfully loaded
-## Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
-## Path to GDAL shared files: C:/Program Files/R/R-4.0.1/library/rgdal/gdal
-## GDAL binary built with GEOS: TRUE 
-## Loaded PROJ runtime: Rel. 6.3.1, February 10th, 2020, [PJ_VERSION: 631]
-## Path to PROJ shared files: C:/Program Files/R/R-4.0.1/library/rgdal/proj
-## Linking to sp version:1.4-2
-## To mute warnings of possible GDAL/OSR exportToProj4() degradation,
-## use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
-```
-
-```r
 library(gdalUtils)
 library(sf)
-```
-
-```
-## Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 6.3.1
-```
-
-```
-## 
-## Attaching package: 'sf'
-```
-
-```
-## The following object is masked from 'package:gdalUtils':
-## 
-##     gdal_rasterize
-```
-
-```r
 library(fasterize)
-```
 
-```
-## 
-## Attaching package: 'fasterize'
-```
-
-```
-## The following object is masked from 'package:graphics':
-## 
-##     plot
-```
-
-```
-## The following object is masked from 'package:base':
-## 
-##     plot
-```
-
-```r
 # plotting 
 library(quickPlot)
 library(ggplot2)
 
 # parallel execution
 library(doSNOW)
-```
-
-```
-## Loading required package: foreach
-```
-
-```
-## Loading required package: iterators
-```
-
-```
-## Loading required package: snow
 ```
 
 **Important user-defined parameters**
