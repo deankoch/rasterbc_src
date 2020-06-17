@@ -43,16 +43,23 @@ cfg.filename = file.path(data.dir, paste0(collection, '.rds'))
 #' can be used to inform interpolation-based models of forest inventory. The model of 
 #' <a href="https://www.nrcresearchpress.com/doi/full/10.1139/cjfr-2017-0184" target="_blank">Beaudoin *et al.* (2017)</a>
 #' uses knn-interpolation to construct Canada-wide predictions of forest attributes in two years, 2001 and 2011. It is an
-#' updated version of the predictions from an 
-#' <a href="https://www.nrcresearchpress.com/doi/full/10.1139/cjfr-2013-0401" target="_blank">earlier CJFR publication</a>.
+#' updated version of the predictions from an earlier CJFR publication,
+#' <a href="https://www.nrcresearchpress.com/doi/full/10.1139/cjfr-2013-0401" target="_blank">Beaudoin *et al.* (2014)</a>.
 #' 
 #' This script downloads the full datasets, transforms them to align with our grid, clips to the BC extent, and extracts a subset of 
-#' attributes most relevant to mountain pine beetle activity. Note that these data are referenced to the original MODIS grid 
+#' attributes most relevant to mountain pine beetle activity. Note that these data are referenced to a MODIS grid 
 #' (<a href="https://www.spatialreference.org/ref/sr-org/8787/html/" target="_blank">NAD83 / Lambert Conformal Conic</a>), 
 #' so we have to transform (warp) them to our coordinate reference system
 #' (<a href="https://spatialreference.org/ref/epsg/nad83-bc-albers/" target="_blank">NAD83 / BC Albers</a>).
+#' 
+#' Layers `veg` and `vegTreed` estimate the percent area that is vegetated or treed (respectively), within the grid cell covered by a given
+#' pixel; `needle` estimates the % of the area represented by `vegTreed` that is covered by needle-leafed species; and the individual `pinus*`
+#' layers estimate the percent of `needle` represented by the species indicated in the 3-letter suffix (*eg.* `pinusCon` indicates
+#' *Pinus contorta*, and `pinusSpp` indicates undetermined *Pinus* species). Layer `age` estimates the (typical) age of members of the leading 
+#' species.
+#' 
 
-#' A more detailed description of the model development and data sources can be found in the two publications linked above, and at the
+#' A more detailed description of the model development and data definitions can be found in the two publications linked above, and at the
 #' <a href="https://open.canada.ca/data/en/dataset/ec9e2659-1c29-4ddb-87a2-6aced147a990" target="_blank">Open Canada Metadata page</a>.
 #' Download links to the source files can be found
 #' <a href="https://ftp.maps.canada.ca/pub/nrcan_rncan/Forests_Foret/canada-forests-attributes_attributs-forests-canada/" target="_blank">here</a>
@@ -100,8 +107,14 @@ varnames = setNames(nm=names(cfg$src$feat.name))
 src.filenames = lapply(cfg$src$years, function(year) setNames(paste0(cfg$src$fname.prefix, year, cfg$src$feat.name, cfg$src$fname.suffix), varnames)) 
 cfg$src$web = lapply(setNames(nm=names(cfg$src$years)), function(year) setNames(paste0(cfg$src$web[year], src.filenames[[year]]), varnames))
 cfg$src$fname = lapply(cfg$src$years, function(year) setNames(paste0(file.path(cfg$src$dir, cfg$src$fname.prefix), year, cfg$src$feat.name, cfg$src$fname.suffix), varnames)) 
-cfg$out$fname$tif$full = lapply(cfg$src$years, function(year) setNames(file.path(data.dir, cfg$out$name, paste0(varnames, '_std_', year, '.tif')), varnames))
+cfg$out$fname$tif$full = lapply(cfg$src$years, function(year) setNames(file.path(data.dir, cfg$out$name, year, paste0(varnames, '_std_', year, '.tif')), varnames))
 
+#' To help keep the data files organized, whenever there are multiple years associated with a dataset, we store the corresponding
+#' year-specific layers in separate subfolders of `file.path(data.dir, collection)` and `file.path(data.dir, collection, 'blocks')`. 
+#' These are created automatically in the call to `MPB_metadata` whenever the named list element `years` exists in the `cfg$src` or 
+#' `cfg.src` arguments (see 'utility_functions.R' for details); *eg.* here we have two subfolders, corresponding to the layers for 
+#' 2001 and 2011.
+#' 
 
 #' **downloads**
 #' 
@@ -140,48 +153,119 @@ if(any(idx.todownload))
 prov.sf = sf::st_read(cfg.borders$out$fname$shp['prov'])
 bc.mask.tif = raster::raster(cfg.borders$out$fname$tif$full['prov'])
 
-#' First, clip each layer to BC and write this full-province raster to disk in a temporary file (1.7 GB):
+#' First, clip each layer to BC, warp to Albers, and write this full-province raster to disk (3.46 GB total).
+#' This involves a lot of big read/write operations, so expect it to take about 15-30 minutes to complete.
 #+ eval=FALSE
-# load the gigantic source raster, note GDAL warning about the outdated PROJ string
-temp.tif = paste0(tempfile(), '.tif')
-pine.tif = raster::raster(cfg$src$fname$yr2001['veg'])
+# loop over years and attributes to process each geotiff one at a time
+print('warping/clipping pine layers...')
+pb = txtProgressBar(min=1, max=length(unlist(cfg$out$fname$tif$full)), style=3)
+for(idx.yr in 1:length(cfg$src$years))
+{
+  for(idx.tif in 1:length(cfg$src$feat.name))
+  {
+    setTxtProgressBar(pb, idx.tif + (idx.yr-1)*length(cfg$src$feat.name))
+    src.filename = cfg$src$fname[[idx.yr]][[idx.tif]]
+    dest.filename = cfg$out$fname$tif$full[[idx.yr]][idx.tif]
 
+    # crop input layer to BC border extent (after reprojecting that polygon)
+    temp.tif = raster::raster(src.filename)
+    temp.crs = raster::crs(temp.tif)
+    prov.reprojected.sf = sf::st_transform(prov.sf, temp.crs)
+    temp.tif = raster::crop(temp.tif, prov.reprojected.sf, snap='out')
+    
+    # write this temporary layer to disk (in original MODIS projection), then delete from memory
+    temp.path = paste0(tempfile(), '.tif')
+    raster::writeRaster(temp.tif, temp.path)
+    rm(temp.tif)
+    
+    # warp raster data to reference system (via tempfile and external GDAL call), saving to disk
+    gdalUtils::gdalwarp(srcfile=temp.path, 
+                        dstfile=dest.filename, 
+                        s_srs=temp.crs, 
+                        t_srs=raster::crs(bc.mask.tif), 
+                        tr=raster::res(bc.mask.tif), 
+                        r='bilinear', 
+                        te=raster::bbox(bc.mask.tif),
+                        overwrite=TRUE, 
+                        verbose=FALSE)
+
+    # delete tempfile from disk, reload new version, compute min/max stats, clip to mask, overwrite on disk
+    unlink(temp.path)
+    temp.tif = raster::mask(raster::setMinMax(raster::raster(dest.filename)), bc.mask.tif)
+    raster::writeRaster(temp.tif, dest.filename, overwrite=TRUE)
+    rm(temp.tif)
+  }
+}
+close(pb)
+
+#' The individual `pinus*` layers predict abundance by species. It can be more useful to have an aggregate quantity,
+#' the proportion of needle-leafed trees from genus *Pinus* (*eg.* to represent the density of hosts vulnerable to mountain 
+#' pine beetle). This is simply the sum of all the `pinus*` layers. We compute that sum below, saving the result as a new layer, 
+#' `pinusTotal` for each year (618 MB total). Expect this to take about 15-20 minutes
+#' 
+
+# add the new filenames to the metadata list
+varnames['pinusTotal'] = 'pinusTotal'
+cfg$out$fname$tif$full = lapply(cfg$src$years, function(year) setNames(file.path(data.dir, cfg$out$name, year, paste0(varnames, '_std_', year, '.tif')), varnames))
+
+# create new layer that is the sum of all individual Pinus species layers
 #+ eval=FALSE
-# crop to BC using a fast GDAL translate operation via tempfile
-pine.bbox = st_bbox(sf::st_transform(prov.sf, raster::crs(pine.tif)))
-gdalUtils::gdal_translate(src_dataset=cfg$src$fname['pine'], 
-                          dst_dataset=temp.tif, 
-                          projwin=pine.bbox[c('xmin', 'ymax', 'xmax', 'ymin')])
 
-#' Next, warp the pine using fast GDAL warp call, save to disk (859 MB), delete tempfile
-#+ eval=FALSE
-# reload pine raster with smaller cropped version, then warp
-pine.tif = raster::raster(temp.tif)
-gdalUtils::gdalwarp(srcfile=temp.tif, 
-                    dstfile=cfg$out$fname$tif$full['pine'], 
-                    s_srs=raster::crs(pine.tif), 
-                    t_srs=raster::crs(bc.mask.tif), 
-                    tr=raster::res(bc.mask.tif), 
-                    r='bilinear', te=raster::bbox(bc.mask.tif), 
-                    overwrite=TRUE, 
-                    verbose=TRUE)
+# identify all the pinus* layers
+idx.pinus = startsWith(varnames, 'pinus') & varnames != 'pinusTotal'
+idx.total = varnames == 'pinusTotal'
 
-#' With large data files, these (external) GDAL calls are much faster than using package `raster`.
-#' Here (and anywhere else a warp is done) I use bilinear interpolation to assign values to grid-points. Note that, 
-#' wherever possible, it is best to avoid warping (a kind of raster-to-raster reprojection), because it is a lossy 
-#' operation, introducing a new source of error. 
+# outer loop over years
+print('summing pinus layers...')
+pb = txtProgressBar(min=1, max=length(cfg$src$years)*sum(idx.pinus), style=3)
+for(idx.yr in 1:length(cfg$src$years))
+{
+  # filenames to read/write
+  src.filenames = cfg$out$fname$tif$full[[idx.yr]][idx.pinus]
+  dest.filename = cfg$out$fname$tif$full[[idx.yr]][idx.total]
+  
+  # create base layer of zeros and NAs (bc.mask.tif has 1's everywhere that is non-NA)
+  temp.tif = raster::mask(bc.mask.tif, bc.mask.tif, maskvalue=1, updatevalue=0)
+  
+  # inner loop over Pinus species layers 
+  for(idx.layer in 1:sum(idx.pinus))
+  {
+    setTxtProgressBar(pb, idx.layer + (idx.yr-1)*sum(idx.pinus))
 
-# reload pine, compute min/max stats, clip to mask, rewrite to disk (415 MB)
-#+ eval=FALSE
-bc.pine.tif = raster::mask(raster::setMinMax(raster::raster(cfg$out$fname$tif$full['pine'])), bc.mask.tif)
-raster::writeRaster(bc.pine.tif, cfg$out$fname$tif$full['pine'], overwrite=TRUE)
-unlink(temp.tif)
+    # add the individual Pinus species layer to the total
+    temp.tif = temp.tif + raster::raster(src.filenames[[idx.layer]])
+  }
+  
+  # correction if we exceed 100%: raster::mask() trick is faster than square-bracket indexing
+  temp.tif = mask(temp.tif, temp.tif > 100, maskvalue=1, updatevalue=100)
 
-#' Finally, split these layers up into mapsheets corresponding to the NTS/SNRC codes (228 MB)
+  # write raster to disk, remove tempfile from memory
+  raster::writeRaster(temp.tif, dest.filename, overwrite=TRUE)
+  rm(temp.tif)
+}
+close(pb)
+
+#' While the above can also be done more simply using the `raster::overlay` function (bundling all pinus* layers into a `rasterBrick`), 
+#' I have found this to be slower and more prone to out-of-memory issues than simply looping over the layers.
+#' 
+
+#' Finally, we split all layers up into mapsheets corresponding to the NTS/SNRC codes (4.16 GB total). Expect this to take around 15-20 minutes
 #+ eval=FALSE
 
 # function call to crop and save blocks
 cfg.blocks = MPB_split(cfg, snrc.sf)
+
+#' Notice that the `MPB_metadata` function detects the `years` entry in `cfg$src`, and automatically loops over 
+#' each year (calling itself with the appropriately modified `cfg.in` argument). The resulting entries of 
+#' `cfg$out$fname$tif$block` are named to match `cfg$src$years`, and each file written to disk is 
+#' assigned a year suffix in addition to the NTS/SNRC mapsheet code (*ie.* they are of the form 
+#' '<varname>_<year>_<mapsheet>.tif').
+#' 
+#' A tidier solution to dealing with both spatial *and* temporal indices is to bundle all of the year-referenced
+#' layers of a given variable together, into a multiband geotiff (represented in R as a `rasterBrick`), with one
+#' band per year. However I have found these files awkward to deal with in R, and the filesizes of the time-series data
+#' (fires, cutblocks, insect damage) increases substantially (by around 18X).
+#' 
 
 # update metadata list `cfg` and save it to `data.dir`.
 cfg = MPB_metadata(collection, cfg.in=cfg, cfg.out=list(fname=list(tif=list(block=cfg.blocks))))

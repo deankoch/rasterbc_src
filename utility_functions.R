@@ -406,8 +406,47 @@ MPB_split = function(cfg.in, snrc.sf)
   # full-province raster layers. It loops over them, splitting each one (ie crop -> mask) 
   # according the polygons in snrc.sf
   
+  # if cfg.in$src contains a (top-level) entry named 'years', it is assumed that cfg.in$out$fname$tif$full 
+  # is a list of character string vectors, one list per year. In that case, MPB_split calls itself
+  # recursively to run the splitting jobs separately on each of the lists in cfg.in$out$fname$tif$full,
+  # writing to subdirectories of cfg.in$out$dir.block, and modifying all names appropriately.
+  
   # (some code below hidden from markdown:)
   # /*
+  
+  # check for years
+  if(!is.null(cfg.in$src$years))
+  {
+    # storage for lists of output filenames
+    n.vars = length(cfg.in$out$fname$tif$full[[1]])
+    n.yrs = length(cfg.in$src$years)
+    cfg.block.list = vector(mode='list', length=n.yrs)
+    
+    # loop over years
+    for(idx.yr in 1:n.yrs)
+    {
+      year = cfg.in$src$years[idx.yr]
+      print(paste('splitting', length(cfg$out$fname$tif$full[[idx.yr]]), 'layers for year', year))
+      
+      # create a temporary metadata list with entries corresponding to this particular year
+      cfg.temp = cfg.in
+      cfg.temp$src$years = NULL
+      cfg.temp$out$dir.block = file.path(cfg.temp$out$dir.block, year)
+      cfg.temp$out$fname$tif$full = cfg.temp$out$fname$tif$full[[idx.yr]]
+      names(cfg.temp$out$fname$tif$full) = paste0(names(cfg.temp$out$fname$tif$full), '_', year)
+      
+      # recursive call to crop and save blocks, using temporary metadata list for this year
+      cfg.blocks = MPB_split(cfg.temp, snrc.sf) 
+      
+      # update metadata list
+      names(cfg.blocks) = names(cfg.in$out$fname$tif$full[[idx.yr]])
+      cfg.block.list[[idx.yr]] = cfg.blocks
+    }
+    
+    # finish
+    names(cfg.block.list) = names(cfg.in$src$years)
+    return(cfg.block.list)
+  }
   
   # get vector of NTS/SNRC names
   snrc.names = snrc.sf$NTS_SNRC

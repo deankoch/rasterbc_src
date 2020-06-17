@@ -148,6 +148,11 @@ MPB_split = function(cfg.in, snrc.sf)
   # full-province raster layers. It loops over them, splitting each one (ie crop -> mask) 
   # according the polygons in snrc.sf
   
+  # if cfg.in$src contains a (top-level) entry named 'years', it is assumed that cfg.in$out$fname$tif$full 
+  # is a list of character string vectors, one list per year. In that case, MPB_split calls itself
+  # recursively to run the splitting jobs separately on each of the lists in cfg.in$out$fname$tif$full,
+  # writing to subdirectories of cfg.in$out$dir.block, and modifying all names appropriately.
+  
   # (some code below hidden from markdown:)
 }
 ```
