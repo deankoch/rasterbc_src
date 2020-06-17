@@ -263,13 +263,12 @@ varnames['pinusTotal'] = 'pinusTotal'
 cfg$out$fname$tif$full = lapply(cfg$src$years, function(year) setNames(file.path(data.dir, cfg$out$name, year, paste0(varnames, '_std_', year, '.tif')), varnames))
 
 # create new layer that is the sum of all individual Pinus species layers
-```
-
-```r
 # identify all the pinus* layers
 idx.pinus = startsWith(varnames, 'pinus') & varnames != 'pinusTotal'
 idx.total = varnames == 'pinusTotal'
+```
 
+```r
 # outer loop over years
 print('summing pinus layers...')
 pb = txtProgressBar(min=1, max=length(cfg$src$years)*sum(idx.pinus), style=3)
@@ -316,7 +315,7 @@ Notice that the `MPB_metadata` function detects the `years` entry in `cfg$src`, 
 each year (calling itself with the appropriately modified `cfg.in` argument). The resulting entries of 
 `cfg$out$fname$tif$block` are named to match `cfg$src$years`, and each file written to disk is 
 assigned a year suffix in addition to the NTS/SNRC mapsheet code (*ie.* they are of the form 
-'<varname>_<year>_<mapsheet>.tif').
+'\<varname\>_\<year\>_\<mapsheet\>.tif').
 
 A tidier solution to dealing with both spatial *and* temporal indices is to bundle all of the year-referenced
 layers of a given variable together, into a multiband geotiff (represented in R as a `rasterBrick`), with one
