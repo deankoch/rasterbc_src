@@ -254,7 +254,7 @@ close(pb)
 # function call to crop and save blocks
 cfg.blocks = MPB_split(cfg, snrc.sf)
 
-#' Notice that the `MPB_metadata` function detects the `years` entry in `cfg$src`, and automatically loops over 
+#' Notice that the `MPB_split` function detects the `years` entry in `cfg$src`, and automatically loops over 
 #' each year (calling itself with the appropriately modified `cfg.in` argument). The resulting entries of 
 #' `cfg$out$fname$tif$block` are named to match `cfg$src$years`, and each file written to disk is 
 #' assigned a year suffix in addition to the NTS/SNRC mapsheet code (*ie.* they are of the form 

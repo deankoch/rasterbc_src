@@ -426,7 +426,7 @@ MPB_split = function(cfg.in, snrc.sf)
     for(idx.yr in 1:n.yrs)
     {
       year = cfg.in$src$years[idx.yr]
-      print(paste('splitting', length(cfg$out$fname$tif$full[[idx.yr]]), 'layers for year', year))
+      print(paste('splitting', length(cfg$out$fname$tif$full[[idx.yr]]), 'layer(s) for year', year))
       
       # create a temporary metadata list with entries corresponding to this particular year
       cfg.temp = cfg.in
@@ -460,8 +460,8 @@ MPB_split = function(cfg.in, snrc.sf)
   for(idx.varname in 1:length(block.paths))
   {
     # load the full BC raster
-    print(paste0('splitting ', cfg.in$out$fname$tif$full[idx.varname], ' into mapsheets...'))
-    temp.tif = raster::raster(cfg.in$out$fname$tif$full[idx.varname])
+    print(paste0('splitting ', cfg.in$out$fname$tif$full[[idx.varname]], ' into mapsheets...'))
+    temp.tif = raster::raster(cfg.in$out$fname$tif$full[[idx.varname]])
     
     #loop over NTS/SNRC mapsheets, cropping full BC rasters and saving to disk 
     for(idx.snrc in 1:length(snrc.names))
