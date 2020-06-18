@@ -155,7 +155,7 @@ fnames.static = c(fnames.static, loss=file.path(data.dir, cfg$out$name, 'lossyea
 #' First, we combine the five granules into a single mosaic raster for each of the four variables, clipping to BC extent,
 #' and warping to BC Albers projection. Full province rasters are then written to disk (?? GB total), with `loss` being split into 18
 #' binary rasters indicating loss in each of the yearlong periods 2000-2001, 2001-2002, ..., 2018-2019. Paths to these output rasters
-#' can be found in `cfg$out$fname$tif$full`. This involves a lot of big read/write operations, so expect it to take about 15-20 minutes 
+#' can be found in `cfg$out$fname$tif$full`. Expect this to take about 15-20 minutes 
 #' to complete.
 #+ eval=FALSE
 # loop over static layers (writes 180 MB)
@@ -221,7 +221,7 @@ close(pb)
 unlink(fnames.static['loss'])
 fnames.static = fnames.static[names(fnames.static) != 'loss']
 
-#' Finally, we split all layers up into mapsheets corresponding to the NTS/SNRC codes (?? GB total). Expect this to take around 20 minutes.
+#' Finally, we split all layers up into mapsheets corresponding to the NTS/SNRC codes (?? GB total). Expect this to take around 30 minutes.
 #' The use of a temporary metadata list, `cfg.temp`, is a kludge to prevent `MPB_split` from looking for yearly data in the static variables.
 #+ eval=FALSE
 
@@ -240,8 +240,8 @@ cfg.temp$out$fname$tif$full = cfg.temp$out$fname$tif$full[!idx.static]
 cfg.loss.blocks = MPB_split(cfg.temp, snrc.sf)
 
 # combine the filename lists
-cfg.blocks = c(cfg.static.blocks, loss=cfg.loss.blocks)
-  
+cfg.blocks = c(cfg.static.blocks, cfg.loss.blocks)
+
 # update metadata list `cfg` and save it to `data.dir`.
 cfg = MPB_metadata(collection, cfg.in=cfg, cfg.out=list(fname=list(tif=list(block=cfg.blocks))))
 saveRDS(cfg, file=cfg.filename)
