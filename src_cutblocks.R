@@ -125,7 +125,7 @@ cutblocks.sf = sf::st_read(cfg$out$fname$shp)
 #'
 #+ eval=FALSE
 # construct a base layer of 0's and NAs
-base.tif = mask(bc.mask.tif, bc.mask.tif, maskvalue=1, updatevalue=0)
+base.tif = raster::mask(bc.mask.tif, bc.mask.tif, maskvalue=1, updatevalue=0)
 
 # loop to rasterize years individually
 pb = txtProgressBar(min=1, max=length(cfg$src$years), style=3)
@@ -134,11 +134,11 @@ for(idx.year in 1:length(cfg$src$years))
   # define polygons to rasterize
   setTxtProgressBar(pb, idx.year)
   year = cfg$src$years[idx.year]
-  idx.towrite = unlist(st_drop_geometry(cutblocks.sf)) == year 
+  idx.towrite = unlist(sf::st_drop_geometry(cutblocks.sf)) == year 
 
   # rasterize, apply provincial borders mask, then write to disk
   temp.tif = fasterize::fasterize(cutblocks.sf[idx.towrite,], bc.mask.tif, field=names(cfg$src$feat.name), fun='any')
-  temp.tif = mask(base.tif, temp.tif, updatevalue=1, inverse=TRUE)
+  temp.tif = raster::mask(base.tif, temp.tif, updatevalue=1, inverse=TRUE)
   raster::writeRaster(temp.tif, cfg$out$fname$tif$full[[idx.year]], overwrite=TRUE)
   rm(temp.tif)
 }
