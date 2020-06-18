@@ -145,7 +145,6 @@ sf::st_write(bgcz.reproj.sf, cfg$out$fname$shp, append=FALSE)
 #' 
 
 
-
 #' Next we rasterize each of the features listed in `cfg.src$feat.name`. The categorical data are converted to
 #' integer (to be compatible with the geotiff format), and we save the conversion table as a list in `cfg$out$code`
 #' (*eg.* the `n`th entry of `cfg$out$code$varname` is coded as `n` in the corresponding raster) 
