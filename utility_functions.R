@@ -96,6 +96,8 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
   if(!all(sf::st_is_valid(poly.sf)))
   {
     poly.sf = sf::st_make_valid(poly.sf)
+    poly.sf = sf::st_collection_extract(poly.sf, 'POLYGON')
+    print('warning: some invalid geometries were repaired')
   }
   
   # prepare new mask raster with higher resolution
