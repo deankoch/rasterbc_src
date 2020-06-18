@@ -5,7 +5,7 @@ date: "June 16, 2020"
 output: github_document
 ---
 
-Estimates of forest extent and change based on Landsat (7 and 8) imaging data spanning 2000 to 2019 from modelling by
+Forest extent and change estimates based on Landsat 7 and 8 imaging data (spanning 2000-2019) from
 <a href="https://www.nrcresearchpress.com/doi/full/10.1139/cjfr-2013-0401" target="_blank">Hansen *et al.*, 2013</a>
 
 
@@ -34,7 +34,7 @@ cfg.filename = file.path(data.dir, paste0(collection, '.rds'))
 
 **source information**
 
-Retrieves the British-Columbia extent of the (global) forest change (GFS) data products published by
+This script fetches the British-Columbia extent of the (global) forest change (GFS) data products published by
 <a href="http://earthenginepartners.appspot.com/science-2013-global-forest/download_v1.7.html" target="_blank">Hansen/UMD/Google/USGS/NASA</a>
 and documented in a 
 <a href="https://www.nrcresearchpress.com/doi/full/10.1139/cjfr-2013-0401" target="_blank">2013 Science publication</a>.
@@ -43,17 +43,17 @@ Estimates are generated from a bagged decision tree model relating multi-band re
 satellites to various tree cover classifications. (for more information on the methods, see the paper's 
 <a href="https://science.sciencemag.org/highwire/filestream/594982/field_highwire_adjunct_files/0/Hansen.SM.pdf" target="_blank">supplementary materials</a>).
 
-This script downloads the relevant granules from the most recent version (v1.7, as of June, 2020), transforms them to align with our grid, and
-clips to the BC extent.
+This script downloads the relevant granules from the most recent version (v1.7, as of June, 2020), transforms them to align with our grid,
+clips to the BC extent, and finally splits all layers into blocks.
 
 Layer `treecover` is a (one-time) percent tree cover estimate for year 2000, where a location is defined as treed if vegetation height exceeds 
 5 metres. Pixels are classified as treed (or not) based on a 50\% cutoff criterion for percent grid cell area covered by trees. Layer `gain` 
 classifies pixels as having transformed from non-treed to treed at some point during the period 2000-2019; and `loss` is a *yearly* classification of 
-stand-level disturbance, identifying pixels that transformed from non-treed to treed during the periods 2000-2001, ... 2018-2019.
+stand-level disturbance, identifying pixels that transformed from treed to non-treed during the years 2000, ..., 2018.
 Layer `mask` identifies landcover type (water versus land) and NA areas, similar to the `cover` variable from the BC BGCZ. 
 
 Two multispectral cloud-free image composites are also available from this source, however they
-are ommitted (for now) to keep file sizes under control.   
+are omitted (for now) to keep file sizes under control.   
 
 
 The GFC source data are licensed under the
@@ -114,11 +114,9 @@ fnames.static = setNames(file.path(data.dir, cfg$out$name, paste0(varnames.stati
 cfg$out$fname$tif$full = c(fnames.static, fnames.loss)
 ```
 
-To help keep the data files organized, whenever there are multiple years associated with a dataset, we store the corresponding
-year-specific layers in separate subfolders of `file.path(data.dir, collection)` and `file.path(data.dir, collection, 'blocks')`. 
-These are created automatically in the call to `MPB_metadata` whenever the named list element `years` exists in the `cfg$src` or 
-`cfg.src` arguments (see 'utility_functions.R' for details); *eg.* here we have two subfolders, corresponding to the layers for 
-2001 and 2011.
+The `loss` layer is split into yearly (binary) rasters in separate subdirectories of `file.path(data.dir, collection)` and 
+`file.path(data.dir, collection, 'blocks')` (named by year). These directories are created automatically in the call to `MPB_metadata`. 
+Here, there are 19 subfolders, for the years 2000, ..., 2018
 
 **downloads**
 
@@ -195,7 +193,7 @@ fnames.static = c(fnames.static, loss=file.path(data.dir, cfg$out$name, 'lossyea
 ```
 
 First, we combine the five granules into a single mosaic raster for each of the four variables, clipping to BC extent,
-and warping to BC Albers projection. Full province rasters are then written to disk (?? GB total), with `loss` being split into 18
+and warping to BC Albers projection. Full province rasters are then written to disk (410 MB total), with `loss` being split into 18
 binary rasters indicating loss in each of the yearlong periods 2000-2001, 2001-2002, ..., 2018-2019. Paths to these output rasters
 can be found in `cfg$out$fname$tif$full`. Expect this to take about 15-20 minutes 
 to complete.
@@ -270,7 +268,7 @@ unlink(fnames.static['loss'])
 fnames.static = fnames.static[names(fnames.static) != 'loss']
 ```
 
-Finally, we split all layers up into mapsheets corresponding to the NTS/SNRC codes (?? GB total). Expect this to take around 30 minutes.
+Finally, we split all layers up into mapsheets corresponding to the NTS/SNRC codes (580 MB total). Expect this to take around 30 minutes.
 The use of a temporary metadata list, `cfg.temp`, is a kludge to prevent `MPB_split` from looking for yearly data in the static variables.
 
 
