@@ -139,8 +139,8 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
         
         if(n.poly > 0)
         {
-          # find bounding box for cropped polygons
-          poly.cropped.bbox = raster::extent(as(sf::st_collection_extract(st_geometry(poly.cropped.sf), type='POLYGON'), 'Spatial'))
+          # find bounding box for cropped polygons (sf bug workaround)
+          poly.cropped.bbox = raster::extent(as(sf::st_collection_extract(sf::st_geometry(poly.cropped.sf), type='POLYGON'), 'Spatial'))
    
           # fast presence/absence rasterization to high res grid
           temp.highres.tif = fasterize::fasterize(poly.sf, raster::crop(mask.highres.tif, poly.cropped.bbox), field=NULL, fun='any', background=0)
@@ -151,7 +151,14 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
           # downsample to reference grid to get % coverage (via GDAL and tempfile)
           temp.tif = paste0(tempfile(), '.tif')
           raster::writeRaster(temp.highres.tif, temp.tif, format='GTiff')
-          gdalUtils::gdalwarp(temp.tif, mosaic.temp.tif[idx.block], raster::crs(mask.tif), raster::crs(mask.tif), tr=raster::res(mask.tif) , r='average', te=temp.highres.bbox, overwrite=TRUE)
+          gdalUtils::gdalwarp(srcfile=temp.tif, 
+                              dstfile=mosaic.temp.tif[idx.block], 
+                              s_srs=raster::crs(mask.tif), 
+                              t_srs=raster::crs(mask.tif), 
+                              tr=raster::res(mask.tif) , 
+                              r='average', 
+                              te=temp.highres.bbox, 
+                              overwrite=TRUE)
           unlink(temp.tif)
         }
       }
@@ -177,8 +184,8 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
         
         if(n.poly > 0)
         {
-          # find bounding box for cropped polygons
-          poly.cropped.bbox = raster::extent(as(sf::st_collection_extract(st_geometry(poly.cropped.sf), type='POLYGON'), 'Spatial'))
+          # find bounding box for cropped polygons (sf bug workaround)
+          poly.cropped.bbox = raster::extent(as(sf::st_collection_extract(sf::st_geometry(poly.cropped.sf), type='POLYGON'), 'Spatial'))
           
           # fast presence/absence rasterization to high res grid
           temp.highres.tif = fasterize::fasterize(poly.sf, raster::crop(mask.highres.tif, poly.cropped.bbox), field=NULL, fun='any', background=0)
@@ -189,7 +196,14 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
           # downsample to reference grid to get % coverage (via GDAL and tempfile)
           temp.tif = paste0(tempfile(), '.tif')
           raster::writeRaster(temp.highres.tif, temp.tif, format='GTiff')
-          gdalUtils::gdalwarp(temp.tif, mosaic.temp.tif[idx.block], raster::crs(mask.tif), raster::crs(mask.tif), tr=raster::res(mask.tif) , r='average', te=temp.highres.bbox, overwrite=TRUE)
+          gdalUtils::gdalwarp(srcfile=temp.tif, 
+                              dstfile=mosaic.temp.tif[idx.block], 
+                              s_srs=raster::crs(mask.tif), 
+                              t_srs=raster::crs(mask.tif), 
+                              tr=raster::res(mask.tif) , 
+                              r='average', 
+                              te=temp.highres.bbox, 
+                              overwrite=TRUE)
           unlink(temp.tif)
         }
       }
