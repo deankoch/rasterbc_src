@@ -367,7 +367,7 @@ fids.sf = sf::st_read(cfg$out$fname$shp)
 
 Next we rasterize the contents, producing (for each combination of year, species, severity code) a numeric layer
 indicating the proportion of the area in each grid cell covered by a pest damage polygon (total size ?? MB).
-This is a lot of processing: **expect the following chunk to take around 8 hours**.
+This is a lot of processing: **expect the following chunk to take around 8-12 hours to complete**.
 
 Note that `raster::removeTmpFiles` seems to not work in loops, and so there is a real possibility of filling up
 the default temp directory drive (with temporary '.gri' files) until it's full, even with large hard drives. To avoid 
