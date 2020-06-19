@@ -372,7 +372,12 @@ for(idx.year in 1:n.years)
       if(nrow(fids.to.rasterize.sf) > 0)
       {
         print(paste('processing', nrow(fids.to.rasterize.sf), 'polygons...'))
-        MPB_rasterize(fids.to.rasterize.sf, bc.mask.tif, dest.file, aggr.factor=10, blocks.sf=snrc.sf, n.cores)
+        MPB_rasterize(poly.sf=fids.to.rasterize.sf, 
+                      mask.tif=bc.mask.tif, 
+                      dest.file=dest.file, 
+                      aggr.factor=10, 
+                      blocks.sf=snrc.sf, 
+                      n.cores=n.cores)
         
       } else {
         

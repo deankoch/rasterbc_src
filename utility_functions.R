@@ -140,8 +140,8 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
         if(n.poly > 0)
         {
           # find bounding box for cropped polygons
-          poly.cropped.bbox = raster::extent(sf::as_Spatial(poly.cropped.sf))
-          
+          poly.cropped.bbox = raster::extent(as(sf::st_collection_extract(st_geometry(poly.cropped.sf), type='POLYGON'), 'Spatial'))
+   
           # fast presence/absence rasterization to high res grid
           temp.highres.tif = fasterize::fasterize(poly.sf, raster::crop(mask.highres.tif, poly.cropped.bbox), field=NULL, fun='any', background=0)
 
@@ -178,7 +178,7 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
         if(n.poly > 0)
         {
           # find bounding box for cropped polygons
-          poly.cropped.bbox = raster::extent(sf::as_Spatial(poly.cropped.sf))
+          poly.cropped.bbox = raster::extent(as(sf::st_collection_extract(st_geometry(poly.cropped.sf), type='POLYGON'), 'Spatial'))
           
           # fast presence/absence rasterization to high res grid
           temp.highres.tif = fasterize::fasterize(poly.sf, raster::crop(mask.highres.tif, poly.cropped.bbox), field=NULL, fun='any', background=0)
