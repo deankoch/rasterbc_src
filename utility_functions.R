@@ -89,9 +89,6 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
   poly.sf = sf::st_geometry(poly.sf)
   poly.sf = sf::st_sf(list(dummy=rep(1, length(poly.sf)), poly.sf))
   
-  # TESTING: convert geometry type to (multi)polygon to avoid fasterize errors 
-  poly.sf = sf::st_collection_extract(poly.sf, 'POLYGON')
-  
   # check for and fix any bad geometries
   if(!all(sf::st_is_valid(poly.sf)))
   {
