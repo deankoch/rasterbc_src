@@ -133,8 +133,12 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
       {
         setTxtProgressBar(pb, idx.block)
         
-        # crop poly.sf to block, count number of polygons overlapping, proceed only if some polygons overlap
+        # crop poly.sf to block, check that we haven't created any invalid geometries
         poly.cropped.sf = suppressWarnings(sf::st_crop(poly.sf, blocks.sf[idx.block]))
+        geometry.blacklist = c('POINT', 'LINESTRING', 'MULTILINESTRING')
+        poly.cropped.sf = poly.cropped.sf[!(st_geometry_type(poly.cropped.sf) %in% geometry.blacklist),]
+        
+        # count number of polygons overlapping, proceed only if some polygons overlap
         n.poly = nrow(poly.cropped.sf)
         
         if(n.poly > 0)
@@ -546,8 +550,7 @@ loadblocks_bc = function()
   # */
 }
 
-#' We see that the required mapsheets are coded as: `O92H`, `O82E`, and `O82L`. The `rasterbc::findblocks_bc` function finds the codes automatically:
-input.sf = example.sf 
+
 findblocks_bc = function(input.sf=NULL)
 {
   # returns (in a character vector) the 4-character SNRC/NTS mapsheet codes corresponding

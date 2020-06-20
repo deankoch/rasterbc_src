@@ -176,7 +176,7 @@ print(length(unlist(fname.pre2004)))
 ```
 
 ```
-## [1] 72
+## [1] 0
 ```
 
 For the years 2004-2019 there are 5 severity levels recorded: 
@@ -203,7 +203,7 @@ print(length(unlist(fname.post2003)))
 ```
 
 ```
-## [1] 512
+## [1] 0
 ```
 
 We add both segments of the time series to the `cfg` metadata list, and define a filename for the 
@@ -244,52 +244,7 @@ if(any(idx.todownload))
 ```
 ## [1] "using existing source files:"
 ## $pre2017
-## [1] "H:/git-MPB/rasterbc/data/fids/source/pest_infestation_poly.gdb"
-## 
-## $yr2017
-## $yr2017$spot
-##                                                      dbf                                                      prj 
-## "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Spot.dbf" "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Spot.prj" 
-##                                                      shp                                                      shx 
-## "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Spot.shp" "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Spot.shx" 
-## 
-## $yr2017$poly
-##                                                      dbf                                                      prj 
-## "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Poly.dbf" "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Poly.prj" 
-##                                                      shp                                                      shx 
-## "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Poly.shp" "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Poly.shx" 
-## 
-## 
-## $yr2018
-## $yr2018$spot
-##                                                            dbf                                                            prj 
-## "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Spot_Jan21.dbf" "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Spot_Jan21.prj" 
-##                                                            shp                                                            shx 
-## "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Spot_Jan21.shp" "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Spot_Jan21.shx" 
-## 
-## $yr2018$poly
-##                                                            dbf                                                            prj 
-## "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Poly_Jan21.dbf" "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Poly_Jan21.prj" 
-##                                                            shp                                                            shx 
-## "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Poly_Jan21.shp" "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Poly_Jan21.shx" 
-## 
-## 
-## $yr2019
-## $yr2019$spot
-##                                                       dbf                                                       prj 
-## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.dbf" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.prj" 
-##                                                       sbn                                                       sbx 
-## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.sbn" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.sbx" 
-##                                                       shp                                                       shx 
-## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.shp" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.shx" 
-## 
-## $yr2019$poly
-##                                                          dbf                                                          prj 
-## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.dbf" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.prj" 
-##                                                          sbn                                                          sbx 
-## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.sbn" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.sbx" 
-##                                                          shp                                                          shx 
-## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.shp" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.shx"
+## character(0)
 ```
 
 
@@ -385,8 +340,8 @@ n.severities = c(rep(length(cfg$src$sev.codes[['pre2004']]), sum(idx.pre2004)), 
 n.years = length(unlist(cfg$src$years))
 n.species = length(cfg$src$spp.codes)
 pb.inner = txtProgressBar(min=1, max=sum(n.species*n.severities), style=3)
-counter = 0
-for(idx.year in 1:n.years)
+counter = 136
+for(idx.year in 9:n.years)
 {
   for(idx.species in 1:n.species)
   {

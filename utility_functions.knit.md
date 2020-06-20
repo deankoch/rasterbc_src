@@ -197,13 +197,8 @@ loadblocks_bc = function()
   # store/load the binary in a more sensible way.
   # (some code below hidden from markdown:)
 }
-```
-
-We see that the required mapsheets are coded as: `O92H`, `O82E`, and `O82L`. The `rasterbc::findblocks_bc` function finds the codes automatically:
 
 
-```r
-input.sf = example.sf 
 findblocks_bc = function(input.sf=NULL)
 {
   # returns (in a character vector) the 4-character SNRC/NTS mapsheet codes corresponding

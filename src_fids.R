@@ -336,8 +336,8 @@ n.severities = c(rep(length(cfg$src$sev.codes[['pre2004']]), sum(idx.pre2004)), 
 n.years = length(unlist(cfg$src$years))
 n.species = length(cfg$src$spp.codes)
 pb.inner = txtProgressBar(min=1, max=sum(n.species*n.severities), style=3)
-counter = 0
-for(idx.year in 1:n.years)
+counter = 136
+for(idx.year in 9:n.years)
 {
   for(idx.species in 1:n.species)
   {
