@@ -26,7 +26,7 @@ This script extracts polygons corresponding to the four major bark beetle pests 
 `cfg$src$years`. It then rasterizes these data to our reference grid, and saves the results. This collection also contains records all the way back to 
 the early 1900s (collected by the Canadian Forest Service), and includes a large number of other forest pests and diseases. We extract only the period 
 2001-2019, and the damage polygons for: mountain pine beetle ('IBM'), spruce beetle ('IBS'), Douglas-fir beetle ('IBD'), and western balsam bark beetle 
-('IBB'). This can be changed by adjusting the list elements `cfg.src$years`, and `cfg.src$spp.codes`, below.
+('IBB'). This can be changed by adjusting the list elements `cfg.src$years`, and `cfg.src$spp.codes`, below. In total, we process 656,550 features.
  
 Polygon and point data up to 2016 have been consolidated and archived into a single zip file
 (see the <a href="https://catalogue.data.gov.bc.ca/dataset/pest-infestation-polygons">BC Data Catalogue</a> entry).
@@ -99,14 +99,14 @@ cfg.src = list(
                                 verysevere = 'V')),
   
   # minimum, maximum, and midpoints of severity % values
-  sev.stats = list(pre2004 = list(Light = c(min=0, mid=5.5, max=10)/100,
-                                  Moderate = c(min=10, mid=20, max=30)/100,
-                                  Severe = c(min=30, mid=65, max=100)/100),
-                   post2003 = list(Trace = c(min=0, mid=0.5, max=1)/100,
-                                   Light = c(min=1, mid=5, max=10)/100,
-                                   Moderate = c(min=10, mid=20, max=30)/100,
-                                   Severe = c(min=30, mid=40, max=50)/100,
-                                   VerySevere = c(min=50, mid=75, max=100)/100)),
+  sev.stats = list(pre2004 = list(light = c(min=0, mid=5.5, max=10)/100,
+                                  moderate = c(min=10, mid=20, max=30)/100,
+                                  severe = c(min=30, mid=65, max=100)/100),
+                   post2003 = list(trace = c(min=0, mid=0.5, max=1)/100,
+                                   light = c(min=1, mid=5, max=10)/100,
+                                   moderate = c(min=10, mid=20, max=30)/100,
+                                   severe = c(min=30, mid=40, max=50)/100,
+                                   verysevere = c(min=50, mid=75, max=100)/100)),
   
   # pest species codes to evaluate (currently bark beetles only)
   spp.codes = c(IBM = 'IBM', # mountain pine beetle 
@@ -176,7 +176,7 @@ print(length(unlist(fname.pre2004)))
 ```
 
 ```
-## [1] 0
+## [1] 72
 ```
 
 For the years 2004-2019 there are 5 severity levels recorded: 
@@ -203,7 +203,7 @@ print(length(unlist(fname.post2003)))
 ```
 
 ```
-## [1] 0
+## [1] 512
 ```
 
 We add both segments of the time series to the `cfg` metadata list, and define a filename for the 
@@ -244,7 +244,52 @@ if(any(idx.todownload))
 ```
 ## [1] "using existing source files:"
 ## $pre2017
-## character(0)
+## [1] "H:/git-MPB/rasterbc/data/fids/source/pest_infestation_poly.gdb"
+## 
+## $yr2017
+## $yr2017$spot
+##                                                      dbf                                                      prj 
+## "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Spot.dbf" "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Spot.prj" 
+##                                                      shp                                                      shx 
+## "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Spot.shp" "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Spot.shx" 
+## 
+## $yr2017$poly
+##                                                      dbf                                                      prj 
+## "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Poly.dbf" "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Poly.prj" 
+##                                                      shp                                                      shx 
+## "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Poly.shp" "H:/git-MPB/rasterbc/data/fids/source/FHF_2017_Poly.shx" 
+## 
+## 
+## $yr2018
+## $yr2018$spot
+##                                                            dbf                                                            prj 
+## "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Spot_Jan21.dbf" "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Spot_Jan21.prj" 
+##                                                            shp                                                            shx 
+## "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Spot_Jan21.shp" "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Spot_Jan21.shx" 
+## 
+## $yr2018$poly
+##                                                            dbf                                                            prj 
+## "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Poly_Jan21.dbf" "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Poly_Jan21.prj" 
+##                                                            shp                                                            shx 
+## "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Poly_Jan21.shp" "H:/git-MPB/rasterbc/data/fids/source/AOS_2018_Poly_Jan21.shx" 
+## 
+## 
+## $yr2019
+## $yr2019$spot
+##                                                       dbf                                                       prj 
+## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.dbf" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.prj" 
+##                                                       sbn                                                       sbx 
+## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.sbn" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.sbx" 
+##                                                       shp                                                       shx 
+## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.shp" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Spots.shx" 
+## 
+## $yr2019$poly
+##                                                          dbf                                                          prj 
+## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.dbf" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.prj" 
+##                                                          sbn                                                          sbx 
+## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.sbn" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.sbx" 
+##                                                          shp                                                          shx 
+## "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.shp" "H:/git-MPB/rasterbc/data/fids/source/AOS_2019_Polygons.shx"
 ```
 
 
@@ -285,7 +330,8 @@ for(year in recent.years)
   poly.recent.sf = poly.recent.sf[idx.fids.spp, names(poly.recent.sf) %in% cfg$src$feat.name$recent]
   
   # rename columns and append to historical data
-  names(poly.recent.sf) = c(names(cfg$src$feat.name$recent), 'geometry')
+  order.colnames = match(names(poly.recent.sf), c(cfg$src$feat.name$recent, 'geometry'))
+  names(poly.recent.sf) = c(names(cfg$src$feat.name$recent), 'geometry')[order.colnames]
   sf::st_geometry(poly.recent.sf) = 'geometry'
   fids.sf = rbind(fids.sf, poly.recent.sf)
   
@@ -296,14 +342,15 @@ for(year in recent.years)
   spot.recent.sf = spot.recent.sf[idx.fids.spp,]
   
   # convert point data to polygon circles (SPOT_AREA in m^2)
-  spot.radii = sqrt(1e4*fids.recent.sf$SPOT_AREA/pi)
+  spot.radii = sqrt(1e4*spot.recent.sf$SPOT_AREA/pi)
   for(spot.radius in unique(spot.radii))
   {
     # st_buffer creates a circle centered at each point
     temp.sf = sf::st_buffer(spot.recent.sf[spot.radii==spot.radius, cfg$src$feat.name$recent], dist=spot.radius)
     
     # rename the columns to match fids.sf, append
-    names(temp.sf) = c(names(cfg$src$feat.name$recent), 'geometry')
+    order.colnames = match(names(temp.sf), c(cfg$src$feat.name$recent, 'geometry'))
+    names(temp.sf) = c(names(cfg$src$feat.name$recent), 'geometry')[order.colnames]
     sf::st_geometry(temp.sf) = 'geometry'
     fids.sf = rbind(fids.sf, temp.sf)
   }
@@ -311,7 +358,7 @@ for(year in recent.years)
 }
 ```
 
-Now that all of the data are merged into `fids.sf`, we can save to a single ESRI shapefile (1.94 GB)
+Now that all of the data are merged into `fids.sf`, we can save to a single ESRI shapefile (1.89 GB)
 
 
 ```r
@@ -320,13 +367,14 @@ sf::st_write(fids.sf, cfg$out$fname$shp, append=FALSE)
 fids.sf = sf::st_read(cfg$out$fname$shp)
 ```
 
-Next we rasterize the contents, producing (for each combination of year, species, severity code) a numeric layer
-indicating the proportion of the area in each grid cell covered by a pest damage polygon (total size ?? MB).
-This is a lot of processing: **expect the following chunk to take around 8-12 hours to complete**.
+Next, rasterize the contents, producing (for each combination of year, species, severity code) a numeric layer
+indicating the proportion of the area in each grid cell covered by a pest damage polygon (total size 4.5 GB).
+This is a lot of processing: **expect the following chunk to take around 12-16 hours to complete**.
 
-Note that `raster::removeTmpFiles` seems to not work in loops, and so there is a real possibility of filling up
-the default temp directory drive (with temporary '.gri' files) until it's full, even with large hard drives. To avoid 
-this we can set the tempfiles directory explicitly and empty it at the end of each loop
+I find that `raster::removeTmpFiles` is sometimes not working in loops, so there is a possibility of accumulating lots of 
+temporary '.gri' files in the default temp directory drive (created when `raster` objects are manipulated in memory). This
+will quickly fill up a hard drive. These files are automatically deleted upon ending the R session, but not during the loop.
+To avoid this problem, within each loop, I set the tempfiles directory explicitly and delete it at the end. 
 
 
 ```r
@@ -340,8 +388,8 @@ n.severities = c(rep(length(cfg$src$sev.codes[['pre2004']]), sum(idx.pre2004)), 
 n.years = length(unlist(cfg$src$years))
 n.species = length(cfg$src$spp.codes)
 pb.inner = txtProgressBar(min=1, max=sum(n.species*n.severities), style=3)
-counter = 136
-for(idx.year in 9:n.years)
+counter = 0
+for(idx.year in 1:n.years)
 {
   for(idx.species in 1:n.species)
   {
@@ -399,15 +447,135 @@ for(idx.year in 9:n.years)
 close(pb.inner)
 ```
 
-Finally, we split all layers up into mapsheets corresponding to the NTS/SNRC codes (365 MB total). Expect this to take around 15-25 minutes
+Lastly, I go through by year, aggregating severity levels at each pixel to produce (for each combination of year, species) a numeric layer
+indicating the proportion of the area in each grid cell damaged by a given pest, and writing to disk (total written: ?? MB). 
+
+For example in 2001-2003 this is done by taking (at each pixel) the inner product of c(`Low`, `Moderate`, `Severe`) and the values
+`c(0.055, 0.2, 0.65)`. This produces a layer representing the (aggregated) midpoint (`mid`) of each AOS severity observation.
+A similar calculation is done to construct the minima and maxima (`min`, and `max`), of the possible ranges of damage levels, as they
+are defined in the AOS Standards 2019 guide
+(<a href="https://www.for.gov.bc.ca/ftp/HFP/external/!publish/Aerial_Overview/Data_stds/">PDF link</a>).
+
+Notice that this coding scheme is different for the pre2014 and post2013 periods, as defined in the list elements of `cfg$src$sev.codes`.
 
 
 ```r
-# function call to crop and save blocks
-cfg.blocks = MPB_split(cfg, snrc.sf)
+# set tempfiles directory
+fids.tempdir = tempdir()
+dir.create(fids.tempdir, showWarnings=F, recursive=T)
+raster::rasterOptions(tmpdir=fids.tempdir)
+
+# loop over years and species
+print('flattening severity layers into proportion-of-cell-area estimates...')
+n.years = length(unlist(cfg$src$years))
+n.species = length(cfg$src$spp.codes)
+pb = txtProgressBar(min=1, max=n.years*n.species, style=3)
+for(idx.year in 1:n.years)
+{
+  for(idx.species in 1:n.species)
+  {
+    # define attributes for these layers
+    year = cfg$src$years[idx.year]
+    species = cfg$src$spp.codes[idx.species]
+    
+    # handle year-dependent severity categories
+    if(year < 2004)
+    {
+      severities = cfg$src$sev.codes[['pre2004']]
+      severity.stats = cfg$src$sev.stats[['pre2004']]
+        
+    } else {
+      
+      severities = cfg$src$sev.codes[['post2003']]
+      severity.stats = cfg$src$sev.stats[['post2003']]
+    }
+    n.severities = length(severities)
+    dest.files = cfg$out$fname$tif$full[[names(year)]][[names(species)]][names(severity.stats[[1]])]
+    
+    # some output on progress for the user
+    setTxtProgressBar(pb, idx.species + n.species*(idx.year-1))
+    species.string = paste0(species, ' (', idx.species, ' of ', n.species, ')')
+    year.string = paste0(year, ' (', idx.year, ' of ', n.years, ')')
+    print(paste0('processing ', n.severities, ' severity levels in year ', year.string, ', species code ', species.string))
+    
+    # create base layers of zeros and NAs (bc.mask.tif has 1's everywhere that is non-NA)
+    out.min.tif = raster::mask(bc.mask.tif, bc.mask.tif, maskvalue=1, updatevalue=0)
+    out.mid.tif = out.min.tif
+    out.max.tif = out.min.tif
+    
+    # loop to overlay severity levels (note that raster::overlay() function doesn't seem to speed this up)
+    for(idx.severity in 1:length(severities))
+    {
+      # load the individual-severity damage layer
+      severity = severities[idx.severity]
+      dmg.percent.tif = raster::setMinMax(raster::raster(cfg$out$fname$tif$full[[names(year)]][[names(species)]][[names(severity)]]))
+      
+      # skip the overlay if the input layer is all NA (indicating no polygons for this year/species/severity level)
+      if(!is.na(minValue(dmg.percent.tif)))
+      {
+        out.min.tif = out.min.tif + ( severity.stats[[names(severity)]]['min'] * dmg.percent.tif )
+        out.mid.tif = out.mid.tif + ( severity.stats[[names(severity)]]['mid'] * dmg.percent.tif ) 
+        out.max.tif = out.max.tif + ( severity.stats[[names(severity)]]['max'] * dmg.percent.tif )
+      }
+    }
+
+    # ensure polygon overlap can't produce >100% values
+    if(maxValue(out.max.tif) > 1)
+    {
+      # raster::mask() trick is faster than square-bracket indexing 
+      out.max.tif = raster::mask(out.max.tif, out.max.tif > 1, maskvalue=1, updatevalue=1)
+    }
+    
+    # write all three yearly rasters to disk temporarily (these will be deleted after bundling time series)
+    raster::writeRaster(out.min.tif, dest.files[['min']], overwrite=TRUE)
+    raster::writeRaster(out.mid.tif, dest.files[['mid']], overwrite=TRUE)
+    raster::writeRaster(out.max.tif, dest.files[['max']], overwrite=TRUE)
+    
+    # junk removal (large temporary raster .gri files accumulate otherwise)
+    unlink(fids.tempdir, recursive=T, force=T)
+    dir.create(fids.tempdir, showWarnings=F, recursive=T)
+  }
+}
+close(pb)
+```
+
+Finally, we split all layers up into mapsheets corresponding to the NTS/SNRC codes (365 MB total). This is broken up into two
+calls to `MPB_split`, in order to handle the addition of two new layers starting in 2004 (`trace` and `verysevere`):
+
+Expect this to take around 15-25 minutes
+
+
+```r
+# define the 2001-2003 period and the layers to split for those years
+years.pre2004 = cfg$src$years[cfg$src$years < 2004]
+severity.stats = cfg$src$sev.stats[['pre2004']]
+varnames = c(names(cfg$src$sev.codes$pre2004), names(severity.stats[[1]]))
+varnames.consolidated = unlist(lapply(names(cfg$src$spp.codes), function(species) paste0(species, '_', varnames)))
+
+# create a temporary metadata list for this period
+cfg.pre2004 = cfg
+cfg.pre2004$src$years = years.pre2004
+cfg.pre2004$out$fname$tif$full = lapply(cfg.pre2004$out$fname$tif$full[names(years.pre2004)], function(year) setNames(unlist(year), varnames.consolidated))
+
+# function call to crop and save blocks, looping over years
+cfg.blocks.pre2004 = MPB_split(cfg.pre2004, snrc.sf)
+
+# define the 2004-2019 period and the layers to split for those years
+years.post2003 = cfg$src$years[cfg$src$years > 2003]
+severity.stats = cfg$src$sev.stats[['post2003']]
+varnames = c(names(cfg$src$sev.codes$post2003), names(severity.stats[[1]]))
+varnames.consolidated = unlist(lapply(names(cfg$src$spp.codes), function(species) paste0(species, '_', varnames)))
+
+# create a temporary metadata list for this period
+cfg.post2003 = cfg
+cfg.post2003$src$years = years.post2003
+cfg.post2003$out$fname$tif$full = lapply(cfg.post2003$out$fname$tif$full[names(years.post2003)], function(year) setNames(unlist(year), varnames.consolidated))
+
+# function call to crop and save blocks, looping over years
+cfg.blocks.post2003 = MPB_split(cfg.post2003, snrc.sf)
 
 # update metadata list `cfg` and save it to `data.dir`.
-cfg = MPB_metadata(collection, cfg.in=cfg, cfg.out=list(fname=list(tif=list(block=cfg.blocks))))
+cfg = MPB_metadata(collection, cfg.in=cfg, cfg.out=list(fname=list(tif=list(block=c(cfg.blocks.pre2004, cfg.blocks.post2003)))))
 saveRDS(cfg, file=cfg.filename)
 ```
 

@@ -133,7 +133,7 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
       {
         setTxtProgressBar(pb, idx.block)
         
-        # crop poly.sf to block, check that we haven't created any invalid geometries
+        # crop poly.sf to block, check that we haven't included any non-polygon geometries
         poly.cropped.sf = suppressWarnings(sf::st_crop(poly.sf, blocks.sf[idx.block]))
         geometry.blacklist = c('POINT', 'LINESTRING', 'MULTILINESTRING')
         poly.cropped.sf = poly.cropped.sf[!(st_geometry_type(poly.cropped.sf) %in% geometry.blacklist),]
@@ -182,8 +182,12 @@ MPB_rasterize = function(poly.sf, mask.tif, dest.file, aggr.factor=10, blocks.sf
       # run the parallel loop
       invisible(foreach::foreach(idx.block=1:length(blocks.sf), .options.snow=opts.progress)) %dopar% {
         
-        # crop poly.sf to block, count number of polygons overlapping, proceed only if some polygons overlap
+        # crop poly.sf to block, check that we haven't included any non-polygon geometries
         poly.cropped.sf = suppressWarnings(sf::st_crop(poly.sf, blocks.sf[idx.block]))
+        geometry.blacklist = c('POINT', 'LINESTRING', 'MULTILINESTRING')
+        poly.cropped.sf = poly.cropped.sf[!(sf::st_geometry_type(poly.cropped.sf) %in% geometry.blacklist),]
+        
+        # count number of polygons overlapping, proceed only if some polygons overlap
         n.poly = nrow(poly.cropped.sf)
         
         if(n.poly > 0)
@@ -446,7 +450,7 @@ MPB_split = function(cfg.in, snrc.sf)
     for(idx.yr in 1:n.yrs)
     {
       year = cfg.in$src$years[idx.yr]
-      print(paste('splitting', length(cfg$out$fname$tif$full[[idx.yr]]), 'layer(s) for year', year))
+      print(paste('splitting', length(cfg.in$out$fname$tif$full[[idx.yr]]), 'layer(s) for year', year))
       
       # create a temporary metadata list with entries corresponding to this particular year
       cfg.temp = cfg.in

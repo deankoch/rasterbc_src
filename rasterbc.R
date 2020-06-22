@@ -43,6 +43,8 @@ plot(st_geometry(bc.bound.sf), add=TRUE, col=adjustcolor('blue', alpha.f=0.2))
 plot(st_geometry(example.sf), add=TRUE, col=adjustcolor('yellow', alpha.f=0.5))
 text(st_coordinates(st_centroid(st_geometry(blocks_bc))), labels=blocks.codes, cex=0.5)
 
+#' We see that the required mapsheets are coded as: `O92H`, `O82E`, and `O82L`. The `rasterbc::findblocks_bc` function finds the codes automatically:
+input.sf = example.sf 
 
 #' 
 # # load the borders info and shapefiles for mapsheets
