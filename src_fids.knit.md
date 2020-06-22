@@ -9,7 +9,7 @@ output: github_document
 
 **license:** <a href="https://www2.gov.bc.ca/gov/content/data/open-data/open-government-licence-bc" target="_blank">Open Government Licence - British Columbia</a>
 
-**size on disk**: 926 MB source data, ?? written as output
+**size on disk**: 926 MB source data, 22 GB written as output
 
 
 
@@ -448,7 +448,7 @@ close(pb.inner)
 ```
 
 Lastly, I go through by year, aggregating severity levels at each pixel to produce (for each combination of year, species) a numeric layer
-indicating the proportion of the area in each grid cell damaged by a given pest, and writing to disk (total written: ?? MB). 
+indicating the proportion of the area in each grid cell damaged by a given pest, and writing to disk (total written: 2.4 GB). 
 
 For example in 2001-2003 this is done by taking (at each pixel) the inner product of c(`Low`, `Moderate`, `Severe`) and the values
 `c(0.055, 0.2, 0.65)`. This produces a layer representing the (aggregated) midpoint (`mid`) of each AOS severity observation.
@@ -539,10 +539,10 @@ for(idx.year in 1:n.years)
 close(pb)
 ```
 
-Finally, we split all layers up into mapsheets corresponding to the NTS/SNRC codes (365 MB total). This is broken up into two
+Finally, we split all layers up into mapsheets corresponding to the NTS/SNRC codes (12.2 GB total). This is broken up into two
 calls to `MPB_split`, in order to handle the addition of two new layers starting in 2004 (`trace` and `verysevere`):
 
-Expect this to take around 15-25 minutes
+Expect this to take around 4-8 hours
 
 
 ```r
