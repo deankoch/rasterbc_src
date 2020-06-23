@@ -214,6 +214,44 @@ projection_bc = function(input.sf)
   # returns the (possibly reprojected) sf object.
   # (some code below hidden from markdown:)
 }
+
+# to do: add extra arguments
+getraster_bc = function(collection=NULL, varname=NULL, year=NULL, region=NULL)
+{
+  # if collection is NULL or invalid, return the list of valid options
+  cfg = metadata_bc()
+  if(is.null(collection))
+  {
+    print('the following collections are available:') 
+    print(names(cfg))
+    return()
+  }
+  if(!(collection %in% names(cfg)))
+  {
+    print(paste0('Error: collection \'', collection, '\' not found')) 
+    getraster_bc()
+    return()
+  }
+  
+  # for now I will ignore year and just develop the static layers case (dem, bgcz, borders)
+  if(is.null(cfg[[collection]]$years))
+  {
+    # if varname is NULL or invalid, return the list of valid options
+    if(is.null(varname))
+    {
+      print('the following variables are available:') 
+      print(names(cfg[[collection]]$out$fname$tif$full))
+      return()
+    }
+    if(!(varname %in% names(cfg[[collection]]$out$fname$tif$full)))
+    {
+      print(paste0('Error: varname \'', varname, '\' not found in collection \'', collection, '\'')) 
+      getraster_bc(collection)
+      return()
+    }
+  }
+  
+}
 ```
 
 
